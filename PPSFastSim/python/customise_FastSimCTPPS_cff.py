@@ -15,6 +15,7 @@ useCR = True
 ecms = 13000.
 det1xoffset = 0.
 det2xoffset = 0.
+tofxoffset  = 0.
 phi_min = -math.pi
 phi_max =  math.pi
 
@@ -82,8 +83,9 @@ def customise(process):
                          ToFInsertion      = cms.double(15), # Number of sigmas (X) from the beam for the tof
                          TrackerZPosition  = cms.double(det1),
                          TrackerLength     = cms.double(trklen),
-                         TrkDet1XOffset    = cms.double(det1xoffset), # tracker 1 missalignment
-                         TrkDet2XOffset    = cms.double(det2xoffset), # tracker 2 missalignment
+                         TrkDet1XOffset    = cms.double(det1xoffset), # tracker 1 sensitive area distance from RP edge
+                         TrkDet2XOffset    = cms.double(det2xoffset), # tracker 2 sensitive area distance from RP edge
+                         ToFDetXOffset     = cms.double(tofxoffset) , # ToF sensitive area distance from RP edge
                          ToFZPosition      = cms.double(tof),
                          SmearHit          = cms.bool(hit_smear),
                          HitSigmaX         = cms.double(10),

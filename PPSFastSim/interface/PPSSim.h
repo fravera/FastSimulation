@@ -64,8 +64,10 @@ class PPSSim {
         void set_tMax(double t)    {t_max   = t;};
         void set_CentralMass(double m,double me) {fCentralMass=m;fCentralMassErr=me;};
         void set_TrackerZPosition(double p)   {fTrackerZPosition=p;};
-        void set_TrackerMisAlignment(double x1F, double x2F, double x1B, double x2B) {
-            fDet1XOffsetF=x1F; fDet2XOffsetF=x2F; fDet1XOffsetB=x1B; fDet2XOffsetB=x2B;}
+        void set_TrackerEdgeOffset(double x1F, double x2F, double x1B, double x2B) {
+            fDet1XOffsetF=x1F; fDet2XOffsetF=x2F; fDet1XOffsetB=x1B; fDet2XOffsetB=x2B;};
+        void set_ToFEdgeOffset(double toFXOffsetF, double toFXOffsetB){
+            fToFXOffsetF = toFXOffsetF; fTOFXOffsetB = toFXOffsetB;};
 
         void set_FilterHitMap(bool f)        {fFilterHitMap=f;};
         void set_ApplyFiducialCuts(bool f)   {fApplyFiducialCuts=f;};
@@ -257,10 +259,12 @@ class PPSSim {
         double fTimeSigma;
 
         // Parameters for the detector missalignment
-        double fDet1XOffsetF;
-        double fDet2XOffsetF;
-        double fDet1XOffsetB;
-        double fDet2XOffsetB;
+        double fTrk1XOffsetF;
+        double fTrk2XOffsetF;
+        double fTrk1XOffsetB;
+        double fTrk2XOffsetB;
+        double fToFXOffsetF ;
+        double fToFXOffsetB ;
 
         // Parameter for time smearing
 

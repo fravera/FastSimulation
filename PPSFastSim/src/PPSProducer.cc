@@ -115,7 +115,8 @@ PPSProducer::PPSProducer(const edm::ParameterSet& iConfig):fVerbose(false)
     int    fToFNCellY          = iConfig.getParameter<int>("ToFNCellY");            // number of cells in Y
     double fTrk1XOffset        = iConfig.getParameter<double>("TrkDet1XOffset");
     double fTrk2XOffset        = iConfig.getParameter<double>("TrkDet2XOffset");
-    double fToFZPosition        = iConfig.getParameter<double>("ToFZPosition");
+    double fTrk1XOffset        = iConfig.getParameter<double>("ToFDetXOffset");
+    double fToFZPosition       = iConfig.getParameter<double>("ToFZPosition");
     double fTCL4Position       = iConfig.getUntrackedParameter<double>("TCL4Position",0.);
     double fTCL5Position       = iConfig.getUntrackedParameter<double>("TCL5Position",0.);
     bool   fSmearHit           = iConfig.getParameter<bool>("SmearHit");
@@ -129,9 +130,9 @@ PPSProducer::PPSProducer(const edm::ParameterSet& iConfig):fVerbose(false)
     bool   fSmearEnergy        = iConfig.getParameter<bool>("SmearEnergy");
     double fBeamEnergy         = iConfig.getParameter<double>("BeamEnergy");    // beam energy in GeV
     double fBeamEnergyRMS      = iConfig.getParameter<double>("BeamEnergyRMS");    // beam energy dispersion in GeV
-    double fBeamSizeAtTrk1    = iConfig.getParameter<double>("BeamSizeAtTrk1"); // beam sigma(X) at first tracker station in mm
-    double fBeamSizeAtTrk2    = iConfig.getParameter<double>("BeamSizeAtTrk2"); // beam sigma(X) at second tracker station in mm
-    double fBeamSizeAtToF     = iConfig.getParameter<double>("BeamSizeAtToF"); // beam sigma(X) at timing station in mm
+    double fBeamSizeAtTrk1     = iConfig.getParameter<double>("BeamSizeAtTrk1"); // beam sigma(X) at first tracker station in mm
+    double fBeamSizeAtTrk2     = iConfig.getParameter<double>("BeamSizeAtTrk2"); // beam sigma(X) at second tracker station in mm
+    double fBeamSizeAtToF      = iConfig.getParameter<double>("BeamSizeAtToF" ); // beam sigma(X) at timing station in mm
     double fPhiMin             = iConfig.getParameter<double>("PhiMin");
     double fPhiMax             = iConfig.getParameter<double>("PhiMax");
     double fCentralMass        = iConfig.getParameter<double>("CentralMass");
@@ -196,7 +197,8 @@ PPSProducer::PPSProducer(const edm::ParameterSet& iConfig):fVerbose(false)
     pps->set_ToFPitch(fToFPitchX*um_to_mm,fToFPitchY*um_to_mm);
     pps->set_ToFZPosition(fToFZPosition);
     pps->set_ToFResolution(fTimeSigma,fToFHitSigmaX,fToFHitSigmaY);
-    pps->set_TrackerMisAlignment(fTrk1XOffset,fTrk2XOffset,fTrk1XOffset,fTrk2XOffset); // use the same offset for the forward and backward arm
+    pps->set_TrackerEdgeOffset(fTrk1XOffset,fTrk2XOffset,fTrk1XOffset,fTrk2XOffset); // use the same offset for the forward and backward arm
+    pps->set_ToFEdgeOffset    (fToFXOffset,fToFXOffset); // use the same offset for the forward and backward arm
     pps->set_HitSmearing(fSmearHit);
     pps->set_VertexSmearing(false); // when using cmssw, vertex smearing is done somewhere else
     pps->set_phiMin(fPhiMin);

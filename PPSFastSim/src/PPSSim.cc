@@ -18,7 +18,7 @@ PPSSim::PPSSim(bool ext_gen): fExternalGenerator(ext_gen),
     fTCL4Position1(0.),fTCL4Position2(0.),fTCL5Position1(0.),fTCL5Position2(0.),
     fSmearVertex(false),fVtxMeanX(0.),fVtxMeanY(0.),fVtxMeanZ(0.),fVtxSigmaX(0.),fVtxSigmaY(0.),fVtxSigmaZ(0.),
     fSmearHit(1.),fHitSigmaX(0.),fHitSigmaY(0.),fHitSigmaZ(0.),fTimeSigma(0.),
-    fDet1XOffsetF(0.),fDet2XOffsetF(0.),fDet1XOffsetB(0.),fDet2XOffsetB(0.),
+    fTrk1XOffsetF(0.),fTrk2XOffsetF(0.),fTrk1XOffsetB(0.),fTrk2XOffsetB(0.),
     fSmearAngle(false),fBeamAngleRMS(0.),fSmearEnergy(false),fBeamEnergyRMS(0.),
     fFilterHitMap(true),fApplyFiducialCuts(true),
     fTrackImpactParameterCut(0.),fMinThetaXatDet1(-200),fMaxThetaXatDet1(200),
@@ -107,23 +107,23 @@ void PPSSim::BeginRun()
     fSim = new PPSSpectrometer<Sim>();
     fReco= new PPSSpectrometer<Reco>();
     //
-    PPSTrkDetector* det1 = new PPSTrkDetector(fTrackerWidth,fTrackerHeight,fTrackerInsertion*fBeamXRMS_Trk1);
-    PPSTrkDetector* det2 = new PPSTrkDetector(fTrackerWidth,fTrackerHeight,fTrackerInsertion*fBeamXRMS_Trk1);
+    PPSTrkDetector* det1 = new PPSTrkDetector(fTrackerWidth,fTrackerHeight,fTrackerInsertion*fBeamXRMS_Trk1 + fTrk1XOffsetF);
+    PPSTrkDetector* det2 = new PPSTrkDetector(fTrackerWidth,fTrackerHeight,fTrackerInsertion*fBeamXRMS_Trk2 + fTrk2XOffsetF);
 
     std::cout << fToFNCellX << " ----------------------  "  << fToFGeometry << std::endl; 
     TrkStation_F = new std::pair<PPSTrkDetector,PPSTrkDetector>(*det1,*det2);
     if(fToFGeometry=="diamond") {
-        ToFDet_F  = new PPSToFDetector(fToFNCellX,fToFNCellY,fToFCellW,fToFCellH,fToFPitchX,fToFPitchY,fToFInsertion*fBeamXRMS_ToF,fTimeSigma);
-        ToFDet_B  = new PPSToFDetector(fToFNCellX,fToFNCellY,fToFCellW,fToFCellH,fToFPitchX,fToFPitchY,fToFInsertion*fBeamXRMS_ToF,fTimeSigma);
+        ToFDet_F  = new PPSToFDetector(fToFNCellX,fToFNCellY,fToFCellW,fToFCellH,fToFPitchX,fToFPitchY,fToFInsertion*fBeamXRMS_ToF+fToFXOffsetF,fTimeSigma);
+        ToFDet_B  = new PPSToFDetector(fToFNCellX,fToFNCellY,fToFCellW,fToFCellH,fToFPitchX,fToFPitchY,fToFInsertion*fBeamXRMS_ToF+fToFXOffsetB,fTimeSigma);
     }
     else if(fToFGeometry=="quartz"){
     std::cout << " ----------------------  "  << fToFCellW.at(0) << std::endl; 
         double fToFCellW_ = fToFCellW.at(0);
-        ToFDet_F  = new PPSToFDetector(fToFNCellX,fToFNCellY,fToFCellW_,fToFCellH,fToFPitchX,fToFPitchY,fToFInsertion*fBeamXRMS_ToF,fTimeSigma);
-        ToFDet_B  = new PPSToFDetector(fToFNCellX,fToFNCellY,fToFCellW_,fToFCellH,fToFPitchX,fToFPitchY,fToFInsertion*fBeamXRMS_ToF,fTimeSigma);
+        ToFDet_F  = new PPSToFDetector(fToFNCellX,fToFNCellY,fToFCellW_,fToFCellH,fToFPitchX,fToFPitchY,fToFInsertion*fBeamXRMS_ToF+fToFXOffsetF,fTimeSigma);
+        ToFDet_B  = new PPSToFDetector(fToFNCellX,fToFNCellY,fToFCellW_,fToFCellH,fToFPitchX,fToFPitchY,fToFInsertion*fBeamXRMS_ToF+fToFXOffsetB,fTimeSigma);
     }
-    det1 = new PPSTrkDetector(fTrackerWidth,fTrackerHeight,fTrackerInsertion*fBeamXRMS_Trk2);
-    det2 = new PPSTrkDetector(fTrackerWidth,fTrackerHeight,fTrackerInsertion*fBeamXRMS_Trk2);
+    det1 = new PPSTrkDetector(fTrackerWidth,fTrackerHeight,fTrackerInsertion*fBeamXRMS_Trk1 + fTrk1XOffsetB);
+    det2 = new PPSTrkDetector(fTrackerWidth,fTrackerHeight,fTrackerInsertion*fBeamXRMS_Trk2 + fTrk2XOffsetB);
     TrkStation_B = new std::pair<PPSTrkDetector,PPSTrkDetector>(*det1,*det2);
      
     fToFHeight = ToFDet_F->GetHeight();
@@ -638,7 +638,7 @@ void PPSSim::TrackerDigi(const PPSBaseData* arm_sim,PPSTrkStation* TrkDet)
     det2->clear();
     for(int i=0;i<const_cast<PPSBaseData*>(arm_sim)->TrkDet1.NHits();i++){
         //if (arm_sim->TrkDet1.HasStopped.at(i)) {arm_reco->TrkDet1.AddHit(0,0,0,0,0,1);continue;}
-        double x = arm_sim->TrkDet1.at(i).X-fDet1XOffsetF*um_to_mm;
+        double x = arm_sim->TrkDet1.at(i).X;
         double y = arm_sim->TrkDet1.at(i).Y;
         double z = 0.;//arm_sim->TrkDet1.Z.at(i);
         HitSmearing(x,y,z);
@@ -655,7 +655,7 @@ void PPSSim::TrackerDigi(const PPSBaseData* arm_sim,PPSTrkStation* TrkDet)
         det1->AddHit(x,y,z);
     }
     for(int i=0;i<const_cast<PPSBaseData*>(arm_sim)->TrkDet2.NHits();i++){
-        double x = arm_sim->TrkDet2.at(i).X-fDet2XOffsetF*um_to_mm;
+        double x = arm_sim->TrkDet2.at(i).X;
         double y = arm_sim->TrkDet2.at(i).Y;
         double z = 0.;
         HitSmearing(x,y,z);
