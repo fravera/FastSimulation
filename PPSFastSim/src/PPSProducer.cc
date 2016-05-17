@@ -287,7 +287,11 @@ PPSProducer::~PPSProducer()
 // ------------ method called once each job just before starting event loop  ------------
 void PPSProducer::beginJob()
 {
-    if (pps) pps->BeginRun();
+    if (pps){
+        pps->PrintParameters();
+        pps->BeginRun();
+        pps->PrintParameters();
+    }
 }
 
 //--------------------------------------------------------------------------------------------------------------//

@@ -10,7 +10,8 @@ PPSSim::PPSSim(bool ext_gen): fExternalGenerator(ext_gen),
     fVerbose(false),NEvent(0),fGenMode(""),
     fBeamLine1File(""),fBeamLine2File(""),fBeam1Direction(1),fBeam2Direction(1),fShowBeamLine(false),
     fCollisionPoint(""),fBeamLineLength(500),fBeamEnergy(0),fBeamMomentum(0),
-    fBeamXRMS_Trk1(0.),fBeamXRMS_Trk2(0.),fBeamXRMS_ToF(0.),
+    fBeamXRMS_ArmB_ToF(0.),fBeamXRMS_ArmB_Trk2(0.),fBeamXRMS_ArmB_ToF(0.),
+    fBeamXRMS_ArmF_ToF(0.),fBeamXRMS_ArmF_Trk2(0.),fBeamXRMS_ArmF_ToF(0.),
     fCrossingAngle(0.),fCrossAngleCorr(false),fKickersOFF(false),
     fDetectorClosestX(-2.),fMaxXfromBeam(-25),fMaxYfromBeam(10),
     fTrackerZPosition(0.),fTrackerLength(0.),fTrackerWidth(0.),fTrackerHeight(0.),
@@ -67,18 +68,46 @@ void PPSSim::BeginRun()
         }
     }
     if (fSimBeam) {
-        TH2F* h1 = new TH2F(*GenBeamProfile(-fTrackerZPosition));
-        TH2F* h2 = new TH2F(*GenBeamProfile(fTrackerZPosition));
-        if (h1) {h1->SetName("BeamProfileB_1"); h1->Write(); delete h1;}
-        if (h2) {h2->SetName("BeamProfileF_1"); h2->Write(); delete h2;}
-        h1 = GenBeamProfile(-(fTrackerZPosition+fTrackerLength));
-        h2 = GenBeamProfile(  fTrackerZPosition+fTrackerLength);
-        if (h1) {h1->SetName("BeamProfileB_2"); h1->Write(); delete h1;}
-        if (h2) {h2->SetName("BeamProfileF_2"); h2->Write(); delete h2;}
-        TH2F* ht = GenBeamProfile(fToFZPosition);
-        if (ht) {ht->SetName("BeamProfileB_ToF"); ht->Write(); delete ht;}
-        ht = GenBeamProfile(-fToFZPosition);
-        if (ht) {ht->SetName("BeamProfileF_ToF"); ht->Write(); delete ht;}
+        TH2F* hBeamProfileArmBTrk = new TH2F(*GenBeamProfile(-fTrackerZPosition));
+        fBeamXRMS_ArmB_Trk1 = hBeamProfileArmBTrk->GetRMS(1);
+        TH2F* hBeamProfileArmFTrk = new TH2F(*GenBeamProfile(fTrackerZPosition));
+        fBeamXRMS_ArmF_Trk1 = hBeamProfileArmFTrk->GetRMS(1);
+        if (hBeamProfileArmBTrk) {
+            hBeamProfileArmBTrk->SetName("BeamProfileB_Trk1"); 
+            hBeamProfileArmBTrk->Write(); 
+            delete hBeamProfileArmBTrk;
+        }
+        if (hBeamProfileArmFTrk) {
+            hBeamProfileArmFTrk->SetName("BeamProfileF_Trk1"); 
+            hBeamProfileArmFTrk->Write(); 
+            delete hBeamProfileArmFTrk;
+        }
+        hBeamProfileArmBTrk = GenBeamProfile(-(fTrackerZPosition+fTrackerLength));
+        fBeamXRMS_ArmB_Trk2 = hBeamProfileArmBTrk->GetRMS(1);
+        hBeamProfileArmFTrk = GenBeamProfile(  fTrackerZPosition+fTrackerLength);
+        fBeamXRMS_ArmF_Trk2 = hBeamProfileArmFTrk->GetRMS(1);
+        if (hBeamProfileArmBTrk) {hBeamProfileArmBTrk->SetName("BeamProfileB_Trk2");
+            hBeamProfileArmBTrk->Write();
+            delete hBeamProfileArmBTrk;
+        }
+        if (hBeamProfileArmFTrk) {hBeamProfileArmFTrk->SetName("BeamProfileF_Trk2");
+            hBeamProfileArmFTrk->Write();
+            delete hBeamProfileArmFTrk;
+        }
+
+        TH2F* hBeamProfileToF = GenBeamProfile(fToFZPosition);
+        fBeamXRMS_ArmB_ToF = hBeamProfileToF->GetRMS(1);
+        if (hBeamProfileToF) {hBeamProfileToF->SetName("BeamProfileB_ToF");
+            hBeamProfileToF->Write();
+            delete hBeamProfileToF;
+        }
+        hBeamProfileToF = GenBeamProfile(-fToFZPosition);
+        fBeamXRMS_ArmF_ToF = hBeamProfileToF->GetRMS(1);
+        if (hBeamProfileToF) {hBeamProfileToF->SetName("BeamProfileF_ToF");
+            hBeamProfileToF->Write();
+            delete hBeamProfileToF;
+        }
+        
         // if colimator position not defined, try to get it from the beamline
         if (fTCL4Position1*fTCL4Position2==0) {
             H_OpticalElement* tcl = beamlineB->getElement("TCL.4R5.B1"); if (tcl) fTCL4Position1=tcl->getS();
@@ -111,23 +140,23 @@ void PPSSim::BeginRun()
     fSim = new PPSSpectrometer<Sim>();
     fReco= new PPSSpectrometer<Reco>();
     //
-    PPSTrkDetector* det1 = new PPSTrkDetector(fTrackerWidth,fTrackerHeight,fTrackerInsertion*fBeamXRMS_Trk1 + fTrk1XOffsetF);
-    PPSTrkDetector* det2 = new PPSTrkDetector(fTrackerWidth,fTrackerHeight,fTrackerInsertion*fBeamXRMS_Trk2 + fTrk2XOffsetF);
+    PPSTrkDetector* det1 = new PPSTrkDetector(fTrackerWidth,fTrackerHeight,fTrackerInsertion*fBeamXRMS_ArmF_Trk1 + fTrk1XOffsetF);
+    PPSTrkDetector* det2 = new PPSTrkDetector(fTrackerWidth,fTrackerHeight,fTrackerInsertion*fBeamXRMS_ArmF_Trk2 + fTrk2XOffsetF);
 
     std::cout << fToFNCellX << " ----------------------  "  << fToFGeometry << std::endl; 
     TrkStation_F = new std::pair<PPSTrkDetector,PPSTrkDetector>(*det1,*det2);
     if(fToFGeometry=="diamond") {
-        ToFDet_F  = new PPSToFDetector(fToFNCellX,fToFNCellY,fToFCellW,fToFCellH,fToFPitchX,fToFPitchY,fToFInsertion*fBeamXRMS_ToF+fToFXOffsetF,fTimeSigma);
-        ToFDet_B  = new PPSToFDetector(fToFNCellX,fToFNCellY,fToFCellW,fToFCellH,fToFPitchX,fToFPitchY,fToFInsertion*fBeamXRMS_ToF+fToFXOffsetB,fTimeSigma);
+        ToFDet_F  = new PPSToFDetector(fToFNCellX,fToFNCellY,fToFCellW,fToFCellH,fToFPitchX,fToFPitchY,fToFInsertion*fBeamXRMS_ArmF_ToF+fToFXOffsetF,fTimeSigma);
+        ToFDet_B  = new PPSToFDetector(fToFNCellX,fToFNCellY,fToFCellW,fToFCellH,fToFPitchX,fToFPitchY,fToFInsertion*fBeamXRMS_ArmB_ToF+fToFXOffsetB,fTimeSigma);
     }
     else if(fToFGeometry=="quartz"){
     std::cout << " ----------------------  "  << fToFCellW.at(0) << std::endl; 
         double fToFCellW_ = fToFCellW.at(0);
-        ToFDet_F  = new PPSToFDetector(fToFNCellX,fToFNCellY,fToFCellW_,fToFCellH,fToFPitchX,fToFPitchY,fToFInsertion*fBeamXRMS_ToF+fToFXOffsetF,fTimeSigma);
-        ToFDet_B  = new PPSToFDetector(fToFNCellX,fToFNCellY,fToFCellW_,fToFCellH,fToFPitchX,fToFPitchY,fToFInsertion*fBeamXRMS_ToF+fToFXOffsetB,fTimeSigma);
+        ToFDet_F  = new PPSToFDetector(fToFNCellX,fToFNCellY,fToFCellW_,fToFCellH,fToFPitchX,fToFPitchY,fToFInsertion*fBeamXRMS_ArmF_ToF+fToFXOffsetF,fTimeSigma);
+        ToFDet_B  = new PPSToFDetector(fToFNCellX,fToFNCellY,fToFCellW_,fToFCellH,fToFPitchX,fToFPitchY,fToFInsertion*fBeamXRMS_ArmB_ToF+fToFXOffsetB,fTimeSigma);
     }
-    det1 = new PPSTrkDetector(fTrackerWidth,fTrackerHeight,fTrackerInsertion*fBeamXRMS_Trk1 + fTrk1XOffsetB);
-    det2 = new PPSTrkDetector(fTrackerWidth,fTrackerHeight,fTrackerInsertion*fBeamXRMS_Trk2 + fTrk2XOffsetB);
+    det1 = new PPSTrkDetector(fTrackerWidth,fTrackerHeight,fTrackerInsertion*fBeamXRMS_ArmB_Trk1 + fTrk1XOffsetB);
+    det2 = new PPSTrkDetector(fTrackerWidth,fTrackerHeight,fTrackerInsertion*fBeamXRMS_ArmB_Trk2 + fTrk2XOffsetB);
     TrkStation_B = new std::pair<PPSTrkDetector,PPSTrkDetector>(*det1,*det2);
      
     fToFHeight = ToFDet_F->GetHeight();
@@ -690,14 +719,20 @@ void PPSSim::Digitization()
 void PPSSim::TrackerDigi(int Direction, const PPSBaseData* arm_sim,PPSTrkStation* TrkDet)
 {
 
-    int trk1Offset=0;
-    int trk2Offset=0;
+    double trk1Offset=0.;
+    double trk2Offset=0.;
+    double beamXRMS_Trk1=0.;
+    double beamXRMS_Trk2=0.;
     if (Direction>0) {
         trk1Offset = fTrk1XOffsetF;
         trk2Offset = fTrk2XOffsetF;
+        beamXRMS_Trk1 = fBeamXRMS_ArmF_Trk1;
+        beamXRMS_Trk2 = fBeamXRMS_ArmF_Trk2;
     } else {
         trk1Offset = fTrk1XOffsetB;
         trk2Offset = fTrk2XOffsetB;
+        beamXRMS_Trk1 = fBeamXRMS_ArmB_Trk1;
+        beamXRMS_Trk2 = fBeamXRMS_ArmB_Trk2;
     }
 
     if(!arm_sim||!TrkDet) return;
@@ -716,7 +751,7 @@ void PPSSim::TrackerDigi(int Direction, const PPSBaseData* arm_sim,PPSTrkStation
         //     continue;
         // } 
         if (fApplyFiducialCuts) {
-            double xmin = fTrackerInsertion*fBeamXRMS_Trk1 + trk1Offset;
+            double xmin = fTrackerInsertion*beamXRMS_Trk1 + trk1Offset;
             double xmax = xmin+fTrackerWidth;
             if (fabs(x)<xmin||fabs(x)>xmax||fabs(y)>fabs(fTrackerHeight/2)) { // use ABS because the detector are on the negative X side
                 continue;
@@ -733,7 +768,7 @@ void PPSSim::TrackerDigi(int Direction, const PPSBaseData* arm_sim,PPSTrkStation
         //     continue;
         // } 
         if (fApplyFiducialCuts) {
-            double xmin = fTrackerInsertion*fBeamXRMS_Trk2 + trk2Offset;
+            double xmin = fTrackerInsertion*beamXRMS_Trk2 + trk2Offset;
             double xmax = xmin+fTrackerWidth;
             if (fabs(x)<xmin||fabs(x)>xmax||fabs(y)>fabs(fTrackerHeight/2)) { // use ABS because the detector are on the negative X side
                 continue;
@@ -748,11 +783,14 @@ void PPSSim::TrackerDigi(int Direction, const PPSBaseData* arm_sim,PPSTrkStation
 void PPSSim::ToFDigi(int Direction, const PPSBaseData* arm_sim,PPSToFDetector* ToFDet)
 {
     
-    int toFOffset=0;
+    double toFOffset=0.;
+    double beamXRMS_ToF=0.;
     if (Direction>0) {
         toFOffset = fToFXOffsetF;
+        beamXRMS_ToF = fBeamXRMS_ArmF_ToF;
     } else {
         toFOffset = fToFXOffsetB;
+        beamXRMS_ToF = fBeamXRMS_ArmB_ToF;
     }
 
     if(!arm_sim||!ToFDet) return;
@@ -769,7 +807,7 @@ void PPSSim::ToFDigi(int Direction, const PPSBaseData* arm_sim,PPSToFDetector* T
         //     continue;
         // }
         if (fApplyFiducialCuts) {
-            double xmin = fToFInsertion*fBeamXRMS_ToF + toFOffset;
+            double xmin = fToFInsertion*beamXRMS_ToF + toFOffset;
             double xmax = xmin+fToFWidth;
             if (fabs(x)<xmin||fabs(x)>xmax||fabs(y)>fabs(fToFHeight/2)) { // use ABS because the detector are on the negative X side
                 continue;
@@ -1048,41 +1086,48 @@ double PPSSim::Minimum_t(const double& xi)
 void PPSSim::PrintParameters()
 {
     edm::LogWarning("debug") << "Running with:\n"
-        << "TrackerPosition    = " <<  fTrackerZPosition << "\n"
-        << "TrackerLength      = " <<  fTrackerLength << "\n"
-        << "TrackerZPosition   = " <<  fTrackerZPosition << "\n"
-        << "TrackerLength      = " <<  fTrackerLength << "\n"
-        << "ToFZPosition       = " <<  fToFZPosition << "\n"
-        << "BeamLineLength     = " <<  fBeamLineLength << "\n"
-        << "SmearVertex        = " <<  fSmearVertex << "\n"
-        << "VtxMeanX           = " <<  fVtxMeanX << "\n"
-        << "VtxMeanY           = " <<  fVtxMeanY << "\n"
-        << "VtxMeanZ           = " <<  fVtxMeanZ << "\n"
-        << "VtxSigmaX          = " <<  fVtxSigmaX << "\n"
-        << "VtxSigmaY          = " <<  fVtxSigmaY << "\n"
-        << "VtxSigmaZ          = " <<  fVtxSigmaZ << "\n"
-        << "VtxMeanZ           = " <<  fVtxMeanZ << "\n"
-        << "VtxSigmaX          = " <<  fVtxSigmaX << "\n"
-        << "VtxSigmaY          = " <<  fVtxSigmaY << "\n"
-        << "VtxSigmaZ          = " <<  fVtxSigmaZ << "\n"
-        << "SmearHit           = " <<  fSmearHit << "\n"
-        << "HitSigmaX          = " <<  fHitSigmaX << "\n"
-        << "HitSigmaY          = " <<  fHitSigmaY << "\n"
-        << "HitSigmaZ          = " <<  fHitSigmaZ << "\n"
-        << "TimeSigma          = " <<  fTimeSigma << "\n"
-        << "SimBeam            = " <<  fSimBeam   << "\n"
-        << "PhiMin             = " <<  fPhiMin    << "\n"
-        << "PhiMax             = " <<  fPhiMax    << "\n"
-        << "EtaMin             = " <<  fEtaMin    << "\n"
-        << "MomentumMin        = " <<  fMomentumMin << "\n"
-        << "CrossAngleCorr     = " <<  fCrossAngleCorr << "\n"
-        << "KickersOFF         = " <<  fKickersOFF << "\n"
-        << "Central Mass       = " <<  fCentralMass << " +- " << fCentralMassErr << "\n"
-        << "TrackImpactParameterCut = " << fTrackImpactParameterCut << "\n"
-        << "MinThetaXatDet1    = " <<fMinThetaXatDet1 << "\n"
-        << "MaxThetaXatDet1    = " <<fMaxThetaXatDet1 << "\n"
-        << "MinThetaYatDet1    = " <<fMinThetaYatDet1 << "\n"
-        << "MaxThetaYatDet1    = " <<fMaxThetaYatDet1 << "\n";
+        << "TrackerPosition     = " <<  fTrackerZPosition << "\n"
+        << "TrackerLength       = " <<  fTrackerLength << "\n"
+        << "TrackerZPosition    = " <<  fTrackerZPosition << "\n"
+        << "TrackerLength       = " <<  fTrackerLength << "\n"
+        << "ToFZPosition        = " <<  fToFZPosition << "\n"
+        << "BeamLineLength      = " <<  fBeamLineLength << "\n"
+        << "SmearVertex         = " <<  fSmearVertex << "\n"
+        << "VtxMeanX            = " <<  fVtxMeanX << "\n"
+        << "VtxMeanY            = " <<  fVtxMeanY << "\n"
+        << "VtxMeanZ            = " <<  fVtxMeanZ << "\n"
+        << "VtxSigmaX           = " <<  fVtxSigmaX << "\n"
+        << "VtxSigmaY           = " <<  fVtxSigmaY << "\n"
+        << "VtxSigmaZ           = " <<  fVtxSigmaZ << "\n"
+        << "VtxMeanZ            = " <<  fVtxMeanZ << "\n"
+        << "VtxSigmaX           = " <<  fVtxSigmaX << "\n"
+        << "VtxSigmaY           = " <<  fVtxSigmaY << "\n"
+        << "VtxSigmaZ           = " <<  fVtxSigmaZ << "\n"
+        << "SmearHit            = " <<  fSmearHit << "\n"
+        << "HitSigmaX           = " <<  fHitSigmaX << "\n"
+        << "HitSigmaY           = " <<  fHitSigmaY << "\n"
+        << "HitSigmaZ           = " <<  fHitSigmaZ << "\n"
+        << "TimeSigma           = " <<  fTimeSigma << "\n"
+        << "SimBeam             = " <<  fSimBeam   << "\n"
+        << "PhiMin              = " <<  fPhiMin    << "\n"
+        << "PhiMax              = " <<  fPhiMax    << "\n"
+        << "EtaMin              = " <<  fEtaMin    << "\n"
+        << "MomentumMin         = " <<  fMomentumMin << "\n"
+        << "CrossAngleCorr      = " <<  fCrossAngleCorr << "\n"
+        << "KickersOFF          = " <<  fKickersOFF << "\n"
+        << "Central Mass        = " <<  fCentralMass << " +- " << fCentralMassErr << "\n"
+        << "TrackImpactParameterCut  = " << fTrackImpactParameterCut << "\n"
+        << "MinThetaXatDet1     = " <<fMinThetaXatDet1 << "\n"
+        << "MaxThetaXatDet1     = " <<fMaxThetaXatDet1 << "\n"
+        << "MinThetaYatDet1     = " <<fMinThetaYatDet1 << "\n"
+        << "MaxThetaYatDet1     = " <<fMaxThetaYatDet1 << "\n"
+        << "fBeamXRMS_ArmF_Trk1 = " <<fBeamXRMS_ArmF_Trk1<<"\n"
+        << "fBeamXRMS_ArmF_Trk2 = " <<fBeamXRMS_ArmF_Trk2<<"\n"
+        << "fBeamXRMS_ArmF_ToF  = " <<fBeamXRMS_ArmF_ToF<<"\n"
+        << "fBeamXRMS_ArmB_Trk1 = " <<fBeamXRMS_ArmB_Trk1<<"\n"
+        << "fBeamXRMS_ArmB_Trk2 = " <<fBeamXRMS_ArmB_Trk2<<"\n"
+        << "fBeamXRMS_ArmB_ToF  = " <<fBeamXRMS_ArmB_ToF<<"\n";
+
 }
 
 //--------------------------------------------------------------------------------------------------------------//

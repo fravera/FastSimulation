@@ -113,9 +113,13 @@ class PPSSim {
         void set_BeamEnergyRMS(double rms)        {fBeamEnergyRMS=rms;};
         void set_BeamAngleSmearing(bool f=false)  {fSmearAngle=f;};
         void set_BeamAngleRMS(double rms)         {fBeamAngleRMS=rms;};
-        void set_BeamXSizes(double bsig_det1,double bsig_det2,double bsig_tof) {fBeamXRMS_Trk1=bsig_det1;
-            fBeamXRMS_Trk2=bsig_det2;
-            fBeamXRMS_ToF=bsig_tof;
+        void set_BeamXSizes(double bsig_det1,double bsig_det2,double bsig_tof) {
+            fBeamXRMS_ArmB_Trk1=bsig_det1;
+            fBeamXRMS_ArmB_Trk2=bsig_det2;
+            fBeamXRMS_ArmB_ToF=bsig_tof;
+            fBeamXRMS_ArmF_Trk1=bsig_det1;
+            fBeamXRMS_ArmF_Trk2=bsig_det2;
+            fBeamXRMS_ArmF_ToF=bsig_tof;
         };
         void set_TrackerInsertion(double xpos) {fTrackerInsertion=xpos;};
         void set_ToFInsertion(double xpos)     {fToFInsertion=xpos;};
@@ -198,9 +202,13 @@ class PPSSim {
         float          fBeamLineLength;
         double         fBeamEnergy;
         double         fBeamMomentum;
-        double         fBeamXRMS_Trk1; // beam X size at tracker station 1
-        double         fBeamXRMS_Trk2; // beam X size at tracker station 2
-        double         fBeamXRMS_ToF; // beam X size at tof station
+        double         fBeamXRMS_ArmF_Trk1; // beam X size at tracker station 1
+        double         fBeamXRMS_ArmF_Trk2; // beam X size at tracker station 2
+        double         fBeamXRMS_ArmF_ToF; // beam X size at tof station
+        double         fBeamXRMS_ArmB_Trk1; // beam X size at tracker station 1
+        double         fBeamXRMS_ArmB_Trk2; // beam X size at tracker station 2
+        double         fBeamXRMS_ArmB_ToF; // beam X size at tof station
+
         double         fCrossingAngle; // in micro radians
         bool           fCrossAngleCorr;
         bool           fKickersOFF;
