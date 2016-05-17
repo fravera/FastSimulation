@@ -13,9 +13,9 @@ vtx_smear = False
 run_with_CR = True
 useCR = True
 ecms = 13000.
-det1xoffset = 0.
-det2xoffset = 0.
-tofxoffset  = 0.
+det1xoffset = 0.25 + 0. #distance from sensitive edge + RP security margin
+det2xoffset = 0.25 + 0. #distance from sensitive edge + RP security margin
+tofxoffset  = 0.6  + 0. #distance from sensitive edge + RP security margin
 phi_min = -math.pi
 phi_max =  math.pi
 
@@ -64,8 +64,6 @@ def customise(process):
                          ToFCellHeight     = cms.double(4.2), # tof cell height in mm
                          ToFNCellX         = cms.int32(8),      # number of cells in X
                          ToFNCellY         = cms.int32(1),      # number of cells in Y
-                         ToFHitSigmaX      = cms.double(150.0),
-                         ToFHitSigmaY      = cms.double(1000.0),
                          )
 	ppssim_tofQuartz = cms.PSet(
                          ToFGeometry       = cms.string("quartz"),
@@ -91,15 +89,17 @@ def customise(process):
                          HitSigmaX         = cms.double(10),
                          HitSigmaY         = cms.double(10),
                          HitSigmaZ         = cms.double(0),
-                         TimeSigma         = cms.double(0.01), #in ns
+                         ToFHitSigmaX      = cms.double(150.0),
+                         ToFHitSigmaY      = cms.double(4200/sqrt(12)),
+                         TimeSigma         = cms.double(0.08), #in ns
                          MinThetaXatDet1   = cms.double(-500.), #min. theta x at first tracker in urad
                          MaxThetaXatDet1   = cms.double(500.),   #max. theta x at first tracker in urad
                          MinThetaYatDet1   = cms.double(-500.), #min. theta y at first tracker in urad
                          MaxThetaYatDet1   = cms.double(500.), #max. theta y at first tracker in urad
-                         DetectorClosestX  = cms.double(-2.),  #min. distance to the beam EVER
-                         MaxXfromBeam      = cms.double(-25),  #max. x from beam for a hit EVER
-                         MaxYfromBeam      = cms.double(10.),  #max |y| from beam for a hit EVER
-                         FilterHitMap      = cms.bool(True),    #apply geometrical (X,Y) in the hits
+                         # DetectorClosestX  = cms.double(-2.),  #min. distance to the beam EVER
+                         # MaxXfromBeam      = cms.double(-25),  #max. x from beam for a hit EVER
+                         # MaxYfromBeam      = cms.double(10.),  #max |y| from beam for a hit EVER
+                         # FilterHitMap      = cms.bool(True),    #apply geometrical (X,Y) in the hits
                          ApplyFiducialCuts = cms.bool(True),     #apply geometrical (X,Y) in the hits
                          UseToFForTracking = cms.bool(True)
                          )

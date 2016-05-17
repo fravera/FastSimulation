@@ -80,7 +80,9 @@ class PPSProducer : public edm::EDProducer {
         edm::InputTag gensrcPart;
         edm::EDGetTokenT<std::vector<reco::GenParticle>> gensrcPartToken;		
 };
-//
+
+//--------------------------------------------------------------------------------------------------------------//
+
 PPSProducer::PPSProducer(const edm::ParameterSet& iConfig):fVerbose(false)
 {
     //register your products
@@ -115,7 +117,7 @@ PPSProducer::PPSProducer(const edm::ParameterSet& iConfig):fVerbose(false)
     int    fToFNCellY          = iConfig.getParameter<int>("ToFNCellY");            // number of cells in Y
     double fTrk1XOffset        = iConfig.getParameter<double>("TrkDet1XOffset");
     double fTrk2XOffset        = iConfig.getParameter<double>("TrkDet2XOffset");
-    double fTrk1XOffset        = iConfig.getParameter<double>("ToFDetXOffset");
+    double fToFXOffset        = iConfig.getParameter<double>("ToFDetXOffset");
     double fToFZPosition       = iConfig.getParameter<double>("ToFZPosition");
     double fTCL4Position       = iConfig.getUntrackedParameter<double>("TCL4Position",0.);
     double fTCL5Position       = iConfig.getUntrackedParameter<double>("TCL5Position",0.);
@@ -147,10 +149,10 @@ PPSProducer::PPSProducer(const edm::ParameterSet& iConfig):fVerbose(false)
     double fMaxthx             = iConfig.getParameter<double>("MaxThetaXatDet1"); // maximum thetaX at first tracker detector (in urad)
     double fMinthy             = iConfig.getParameter<double>("MinThetaYatDet1"); // minimum thetaY at first tracker detector (in urad)
     double fMaxthy             = iConfig.getParameter<double>("MaxThetaYatDet1"); // maximum thetaY at first tracker detector (in urad)
-    double fMaxXfromBeam       = iConfig.getParameter<double>("MaxXfromBeam");    // maximum distance (X) from beam a hit is accepted (in mm, negative)
-    double fMaxYfromBeam       = iConfig.getParameter<double>("MaxYfromBeam");    // maximum distance (Y) from beam a hit is accepted (in mm, positive, simetric)
-    double fDetectorClosestX   = iConfig.getParameter<double>("DetectorClosestX");// minimum distance (X) from beam a hit is accepted (in mm, negative)
-    bool   fFilterHitMap       = iConfig.getParameter<bool>("FilterHitMap");       // apply geometrical cuts in the hit position (RP window+distance from beam)
+    // double fMaxXfromBeam       = iConfig.getParameter<double>("MaxXfromBeam");    // maximum distance (X) from beam a hit is accepted (in mm, negative)
+    // double fMaxYfromBeam       = iConfig.getParameter<double>("MaxYfromBeam");    // maximum distance (Y) from beam a hit is accepted (in mm, positive, simetric)
+    // double fDetectorClosestX   = iConfig.getParameter<double>("DetectorClosestX");// minimum distance (X) from beam a hit is accepted (in mm, negative)
+    // bool   fFilterHitMap       = iConfig.getParameter<bool>("FilterHitMap");       // apply geometrical cuts in the hit position (RP window+distance from beam)
     bool   fApplyFiducialCuts  = iConfig.getParameter<bool>("ApplyFiducialCuts");  // apply geometrical cuts in the hit position (Detector size)
     bool   fUseToFForTracking  = iConfig.getParameter<bool>("UseToFForTracking"); 
 
@@ -214,11 +216,15 @@ PPSProducer::PPSProducer(const edm::ParameterSet& iConfig):fVerbose(false)
     pps->set_TrackImpactParameterCut(fImpParcut);
     pps->set_ThetaXRangeatDet1(fMinthx,fMaxthx);
     pps->set_ThetaYRangeatDet1(fMinthy,fMaxthy);
-    pps->set_WindowForTrack(fMaxXfromBeam,fMaxYfromBeam,fDetectorClosestX);
-    pps->set_FilterHitMap(fFilterHitMap);
+    // pps->set_WindowForTrack(fMaxXfromBeam,fMaxYfromBeam,fDetectorClosestX);
+    // pps->set_FilterHitMap(fFilterHitMap);
     pps->set_ApplyFiducialCuts(fApplyFiducialCuts);
     pps->set_UseToFForTracking(fUseToFForTracking);
 }
+
+
+//--------------------------------------------------------------------------------------------------------------//
+
 //
 // member functions
 //
@@ -266,6 +272,8 @@ void PPSProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
     iEvent.put(fReco,"PPSReco");
 }
 
+//--------------------------------------------------------------------------------------------------------------//
+
 PPSProducer::~PPSProducer()
 {
 
@@ -273,36 +281,51 @@ PPSProducer::~PPSProducer()
     // (e.g. close files, deallocate resources etc.)
 
 }
+
+//--------------------------------------------------------------------------------------------------------------//
+
 // ------------ method called once each job just before starting event loop  ------------
 void PPSProducer::beginJob()
 {
     if (pps) pps->BeginRun();
 }
 
+//--------------------------------------------------------------------------------------------------------------//
+
 // ------------ method called once each job just after ending the event loop  ------------
 void PPSProducer::endJob() {
     if(pps) pps->EndRun();
 }
+
+//--------------------------------------------------------------------------------------------------------------//
 
 // ------------ method called when starting to processes a run  ------------
 void PPSProducer::beginRun(edm::Run&, edm::EventSetup const&)
 {
 }
 
+//--------------------------------------------------------------------------------------------------------------//
+
 // ------------ method called when ending the processing of a run  ------------
 void PPSProducer::endRun(edm::Run&, edm::EventSetup const&)
 {
 }
+
+//--------------------------------------------------------------------------------------------------------------//
 
 // ------------ method called when starting to processes a luminosity block  ------------
 void PPSProducer::beginLuminosityBlock(edm::LuminosityBlock&, edm::EventSetup const&)
 {
 }
 
+//--------------------------------------------------------------------------------------------------------------//
+
 // ------------ method called when ending the processing of a luminosity block  ------------
 void PPSProducer::endLuminosityBlock(edm::LuminosityBlock&, edm::EventSetup const&)
 {
 }
+
+//--------------------------------------------------------------------------------------------------------------//
 
 // ------------ method fills 'descriptions' with the allowed parameters for the module  ------------
 void PPSProducer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
@@ -312,6 +335,8 @@ void PPSProducer::fillDescriptions(edm::ConfigurationDescriptions& descriptions)
     desc.setUnknown();
     descriptions.addDefault(desc);
 }
+
+//--------------------------------------------------------------------------------------------------------------//
 
 //define this as a plug-in
 DEFINE_FWK_MODULE(PPSProducer);

@@ -38,8 +38,9 @@
    twice the proton mass squared to recover the quadrimomentum lost of the scattered proton
    */
 #include "FastSimulation/PPSFastSim/interface/PPSConstants.h"
-//=====================================================================================================
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
+
+//=====================================================================================================
 
 class PPSSim {
     public:
@@ -65,15 +66,15 @@ class PPSSim {
         void set_CentralMass(double m,double me) {fCentralMass=m;fCentralMassErr=me;};
         void set_TrackerZPosition(double p)   {fTrackerZPosition=p;};
         void set_TrackerEdgeOffset(double x1F, double x2F, double x1B, double x2B) {
-            fDet1XOffsetF=x1F; fDet2XOffsetF=x2F; fDet1XOffsetB=x1B; fDet2XOffsetB=x2B;};
+            fTrk1XOffsetF=x1F; fTrk2XOffsetF=x2F; fTrk1XOffsetB=x1B; fTrk2XOffsetB=x2B;};
         void set_ToFEdgeOffset(double toFXOffsetF, double toFXOffsetB){
-            fToFXOffsetF = toFXOffsetF; fTOFXOffsetB = toFXOffsetB;};
+            fToFXOffsetF = toFXOffsetF; fToFXOffsetB = toFXOffsetB;};
 
         void set_FilterHitMap(bool f)        {fFilterHitMap=f;};
         void set_ApplyFiducialCuts(bool f)   {fApplyFiducialCuts=f;};
         void set_UseToFForTracking(bool f)   {fUseToFForTracking=f;};
-        void set_WindowForTrack(double x, double y,double c)
-        {fMaxXfromBeam=x;fMaxYfromBeam=y;fDetectorClosestX=c;};
+        // void set_WindowForTrack(double x, double y,double c)
+        //     {fMaxXfromBeam=x;fMaxYfromBeam=y;fDetectorClosestX=c;};
         void set_TrackerLength(double p)     {fTrackerLength=p;};
         void set_TrackerSize(double w,double h) {fTrackerWidth=w;fTrackerHeight=h;};
         void set_ToFGeometry(std::string tofgeometry)   {fToFGeometry=tofgeometry;};
@@ -135,8 +136,8 @@ class PPSSim {
         void TrackerReco(int Direction,H_RecRPObject* station,PPSBaseData* arm);
         void ToFReco();
         void Digitization();
-        void TrackerDigi(const PPSBaseData*,PPSTrkStation*);
-        void ToFDigi(const PPSBaseData*,PPSToFDetector*);
+        void TrackerDigi(int Direction, const PPSBaseData*,PPSTrkStation*);
+        void ToFDigi(int Direction, const PPSBaseData*,PPSToFDetector*);
         void ReconstructArm(H_RecRPObject* pps_station, double x1,double y1,double x2,double y2, double& tx, double& ty,double& eloss);
         void Get_t_and_xi(const TLorentzVector* p,double& t, double& xi);
 
@@ -259,12 +260,12 @@ class PPSSim {
         double fTimeSigma;
 
         // Parameters for the detector missalignment
-        double fTrk1XOffsetF;
-        double fTrk2XOffsetF;
-        double fTrk1XOffsetB;
-        double fTrk2XOffsetB;
-        double fToFXOffsetF ;
-        double fToFXOffsetB ;
+        double fTrk1XOffsetF; // distance from RP window to traker 1 Arm F sensor sensitive area
+        double fTrk2XOffsetF; // distance from RP window to traker 2 Arm F sensor sensitive area
+        double fTrk1XOffsetB; // distance from RP window to traker 1 Arm B sensor sensitive area
+        double fTrk2XOffsetB; // distance from RP window to traker 2 Arm B sensor sensitive area
+        double fToFXOffsetF ; // distance from RP window to ToF Arm F sensor sensitive area
+        double fToFXOffsetB ; // distance from RP window to ToF Arm B sensor sensitive area
 
         // Parameter for time smearing
 

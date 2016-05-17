@@ -5,6 +5,7 @@
 #include <TF1.h>
 
 //=====================================================================================================
+
 PPSSim::PPSSim(bool ext_gen): fExternalGenerator(ext_gen),
     fVerbose(false),NEvent(0),fGenMode(""),
     fBeamLine1File(""),fBeamLine2File(""),fBeam1Direction(1),fBeam2Direction(1),fShowBeamLine(false),
@@ -31,6 +32,9 @@ PPSSim::PPSSim(bool ext_gen): fExternalGenerator(ext_gen),
     beam2profile=NULL;
     gRandom3  = new TRandom3(0);
 }
+
+//--------------------------------------------------------------------------------------------------------------//
+
 void PPSSim::BeginRun()
 {    
     if (fVerbose) edm::LogWarning("debug") << "fBeamLine1File: " << fBeamLine1File ;
@@ -137,10 +141,14 @@ void PPSSim::BeginRun()
     }
 }
 
-//
+//--------------------------------------------------------------------------------------------------------------//
+
 void PPSSim::EndRun()
 {
 }
+
+//--------------------------------------------------------------------------------------------------------------//
+
 void PPSSim::BeginEvent()
 {
     fGen->clear();
@@ -160,6 +168,9 @@ void PPSSim::BeginEvent()
     ToFDet_B->clear();
 
 }
+
+//--------------------------------------------------------------------------------------------------------------//
+
 void PPSSim::EndEvent()
 {
     for(int i=0;i<NVertex;i++) {
@@ -171,6 +182,9 @@ void PPSSim::EndEvent()
     protonF=NULL;
     protonB=NULL;
 }
+
+//--------------------------------------------------------------------------------------------------------------//
+
 void PPSSim::Run() {
     if (!fExternalGenerator) Generation();
     if (fVerbose) edm::LogWarning("debug") << "PPSSim: Starting Simulation step."; 
@@ -180,6 +194,9 @@ void PPSSim::Run() {
     if (fVerbose) edm::LogWarning("debug") << "PPSSim: Starting Reconstruction step.";
     Reconstruction();
 }
+
+//--------------------------------------------------------------------------------------------------------------//
+
 void PPSSim::Generation()
 {
     // Uses the CMS units in the vertex and mm for the PPS parameters
@@ -204,11 +221,17 @@ void PPSSim::Generation()
     fHasStoppedF=false;fHasStoppedB=false;
     set_GenData();
 }
+
+//--------------------------------------------------------------------------------------------------------------//
+
 //
 // fill the tree structures 
 void PPSSim::ReadGenEvent(const std::vector<TrackingParticle>* gentrackingP)
 {
 }
+
+//--------------------------------------------------------------------------------------------------------------//
+
 //Using reco gen particle
 void PPSSim::ReadGenEvent(const std::vector<reco::GenParticle>* genP)
 {
@@ -264,6 +287,9 @@ void PPSSim::ReadGenEvent(const std::vector<reco::GenParticle>* genP)
     }
     set_GenData();
 }
+
+//--------------------------------------------------------------------------------------------------------------//
+
 void PPSSim::ReadGenEvent(const HepMC::GenEvent* evt)
 {
     using namespace CLHEP;
@@ -311,6 +337,9 @@ void PPSSim::ReadGenEvent(const HepMC::GenEvent* evt)
     }
     set_GenData();
 }
+
+//--------------------------------------------------------------------------------------------------------------//
+
 void PPSSim::set_GenData()
 {
     for(int i=0;i<NVertex;i++) {
@@ -329,6 +358,9 @@ void PPSSim::set_GenData()
         }
     }
 }
+
+//--------------------------------------------------------------------------------------------------------------//
+
 void PPSSim::Get_t_and_xi(const TLorentzVector* proton,double& t,double& xi) {
     t = 0.;
     xi = -1.;
@@ -340,6 +372,9 @@ void PPSSim::Get_t_and_xi(const TLorentzVector* proton,double& t,double& xi) {
     t      = -2.*(ProtonMassSQ-fBeamEnergy*energy+fBeamMomentum*mom*cos(theta));
     xi     = (1.0-energy/fBeamEnergy);
 }
+
+//--------------------------------------------------------------------------------------------------------------//
+
 void PPSSim::Simulation()
 {
     for(int i=0;i<NVertex;i++) {
@@ -397,6 +432,9 @@ void PPSSim::Simulation()
         } 
     }
 }
+
+//--------------------------------------------------------------------------------------------------------------//
+
 void PPSSim::Reconstruction()
 {
     int Direction;
@@ -406,6 +444,9 @@ void PPSSim::Reconstruction()
     TrackerReco(Direction,pps_stationB,&(fReco->ArmB));
     ToFReco();
 }
+
+//--------------------------------------------------------------------------------------------------------------//
+
 bool PPSSim::SearchTrack( TGraphErrors *xLineProjection, TGraphErrors *yLineProjection ,int Direction,double& xi,double& t,double& partP,double& pt,double& thx,double& thy,double& x0, double& y0)
 {
     double theta=0.;
@@ -463,6 +504,9 @@ bool PPSSim::SearchTrack( TGraphErrors *xLineProjection, TGraphErrors *yLineProj
     }
     return true;
 }
+
+//--------------------------------------------------------------------------------------------------------------//
+
 void PPSSim::TrackerReco(int Direction,H_RecRPObject* station,PPSBaseData* arm_base)
 {
     //
@@ -545,6 +589,9 @@ void PPSSim::TrackerReco(int Direction,H_RecRPObject* station,PPSBaseData* arm_b
         } 
     }
 }
+
+//--------------------------------------------------------------------------------------------------------------//
+
 void PPSSim::ToFReco()
 {
     PPSRecoTracks* tracksF=&(fReco->ArmF.Tracks);
@@ -599,6 +646,9 @@ void PPSSim::ToFReco()
         } 
     } 
 }
+
+//--------------------------------------------------------------------------------------------------------------//
+
 void PPSSim::ReconstructArm(H_RecRPObject* pps_station, double x1, double y1, double x2, double y2, double& tx, double& ty, double& eloss)
 {
     tx=0.;
@@ -617,19 +667,39 @@ void PPSSim::ReconstructArm(H_RecRPObject* pps_station, double x1, double y1, do
     ty =  pps_station->getTYIP();
     eloss = pps_station->getE();
 }
+
+//--------------------------------------------------------------------------------------------------------------//
+
 void PPSSim::Digitization()
 {
     //    Fake method to mimic a digitization procedure
     //    Just copy the information from the fSim branch and smear the hit according to a given
     //    detector resolution;
+    int Direction;
+    Direction=1;
+    TrackerDigi(Direction,&(fSim->ArmF),TrkStation_F);
+    ToFDigi(Direction,&(fSim->ArmF),ToFDet_F);
 
-    TrackerDigi(&(fSim->ArmF),TrkStation_F);
-    TrackerDigi(&(fSim->ArmB),TrkStation_B);
-    ToFDigi(&(fSim->ArmF),ToFDet_F);
-    ToFDigi(&(fSim->ArmB),ToFDet_B);
+    Direction=-1;
+    TrackerDigi(Direction,&(fSim->ArmB),TrkStation_B);
+    ToFDigi(Direction,&(fSim->ArmB),ToFDet_B);
 }
-void PPSSim::TrackerDigi(const PPSBaseData* arm_sim,PPSTrkStation* TrkDet)
+
+//--------------------------------------------------------------------------------------------------------------//
+
+void PPSSim::TrackerDigi(int Direction, const PPSBaseData* arm_sim,PPSTrkStation* TrkDet)
 {
+
+    int trk1Offset=0;
+    int trk2Offset=0;
+    if (Direction>0) {
+        trk1Offset = fTrk1XOffsetF;
+        trk2Offset = fTrk2XOffsetF;
+    } else {
+        trk1Offset = fTrk1XOffsetB;
+        trk2Offset = fTrk2XOffsetB;
+    }
+
     if(!arm_sim||!TrkDet) return;
     //
     PPSTrkDetector* det1 = &(TrkDet->first);
@@ -642,11 +712,11 @@ void PPSSim::TrackerDigi(const PPSBaseData* arm_sim,PPSTrkStation* TrkDet)
         double y = arm_sim->TrkDet1.at(i).Y;
         double z = 0.;//arm_sim->TrkDet1.Z.at(i);
         HitSmearing(x,y,z);
-        if (fFilterHitMap&&(x>fDetectorClosestX||x<fMaxXfromBeam||fabs(y)>fabs(fMaxYfromBeam))) {
-            continue;
-        } 
+        // if (fFilterHitMap&&(x>fDetectorClosestX||x<fMaxXfromBeam||fabs(y)>fabs(fMaxYfromBeam))) {
+        //     continue;
+        // } 
         if (fApplyFiducialCuts) {
-            double xmin = fTrackerInsertion*fBeamXRMS_Trk1;
+            double xmin = fTrackerInsertion*fBeamXRMS_Trk1 + trk1Offset;
             double xmax = xmin+fTrackerWidth;
             if (fabs(x)<xmin||fabs(x)>xmax||fabs(y)>fabs(fTrackerHeight/2)) { // use ABS because the detector are on the negative X side
                 continue;
@@ -659,11 +729,11 @@ void PPSSim::TrackerDigi(const PPSBaseData* arm_sim,PPSTrkStation* TrkDet)
         double y = arm_sim->TrkDet2.at(i).Y;
         double z = 0.;
         HitSmearing(x,y,z);
-        if (fFilterHitMap&&(x>fDetectorClosestX||x<fMaxXfromBeam||fabs(y)>fabs(fMaxYfromBeam))) {
-            continue;
-        } 
+        // if (fFilterHitMap&&(x>fDetectorClosestX||x<fMaxXfromBeam||fabs(y)>fabs(fMaxYfromBeam))) {
+        //     continue;
+        // } 
         if (fApplyFiducialCuts) {
-            double xmin = fTrackerInsertion*fBeamXRMS_Trk2;
+            double xmin = fTrackerInsertion*fBeamXRMS_Trk2 + trk2Offset;
             double xmax = xmin+fTrackerWidth;
             if (fabs(x)<xmin||fabs(x)>xmax||fabs(y)>fabs(fTrackerHeight/2)) { // use ABS because the detector are on the negative X side
                 continue;
@@ -672,8 +742,19 @@ void PPSSim::TrackerDigi(const PPSBaseData* arm_sim,PPSTrkStation* TrkDet)
         det2->AddHit(x,y,z);
     }
 }
-void PPSSim::ToFDigi(const PPSBaseData* arm_sim,PPSToFDetector* ToFDet)
+
+//--------------------------------------------------------------------------------------------------------------//
+
+void PPSSim::ToFDigi(int Direction, const PPSBaseData* arm_sim,PPSToFDetector* ToFDet)
 {
+    
+    int toFOffset=0;
+    if (Direction>0) {
+        toFOffset = fToFXOffsetF;
+    } else {
+        toFOffset = fToFXOffsetB;
+    }
+
     if(!arm_sim||!ToFDet) return;
     // what direction?
     PPSRecoData* arm_reco=NULL;
@@ -684,11 +765,11 @@ void PPSSim::ToFDigi(const PPSBaseData* arm_sim,PPSToFDetector* ToFDet)
     for(int i=0;i<const_cast<PPSBaseData*>(arm_sim)->ToFDet.NHits();i++){
         double x = arm_sim->ToFDet.at(i).X;
         double y = arm_sim->ToFDet.at(i).Y;
-        if (fFilterHitMap&&(x>fDetectorClosestX||x<fMaxXfromBeam||fabs(y)>fabs(fMaxYfromBeam))) {
-            continue;
-        }
+        // if (fFilterHitMap&&(x>fDetectorClosestX||x<fMaxXfromBeam||fabs(y)>fabs(fMaxYfromBeam))) {
+        //     continue;
+        // }
         if (fApplyFiducialCuts) {
-            double xmin = fToFInsertion*fBeamXRMS_ToF;
+            double xmin = fToFInsertion*fBeamXRMS_ToF + toFOffset;
             double xmax = xmin+fToFWidth;
             if (fabs(x)<xmin||fabs(x)>xmax||fabs(y)>fabs(fToFHeight/2)) { // use ABS because the detector are on the negative X side
                 continue;
@@ -708,6 +789,9 @@ void PPSSim::ToFDigi(const PPSBaseData* arm_sim,PPSToFDetector* ToFDet)
         else arm_reco->AddHitToF(cellid,t,0.,0.);
     }
 }
+
+//--------------------------------------------------------------------------------------------------------------//
+
 void PPSSim::GenSingleParticle(double& t, double& xi, double& phi)
 {
     phi = gRandom3->Uniform(fPhiMin,fPhiMax);
@@ -723,6 +807,9 @@ void PPSSim::GenSingleParticle(double& t, double& xi, double& phi)
     double min_t = Minimum_t(xi);
     if (t<min_t) t = min_t;
 }
+
+//--------------------------------------------------------------------------------------------------------------//
+
 void PPSSim::GenCentralMass(double& t1, double& t2, double& xi1, double& xi2, double& phi1, double& phi2)
 {
     if (fCentralMassErr>0) {
@@ -747,6 +834,9 @@ void PPSSim::GenCentralMass(double& t1, double& t2, double& xi1, double& xi2, do
     t1   = gRandom3->Uniform(Minimum_t(xi1),t_max);
     t2   = gRandom3->Uniform(Minimum_t(xi2),t_max);
 }
+
+//--------------------------------------------------------------------------------------------------------------//
+
 void PPSSim::LorentzBoost(TLorentzVector& p_out, const string& frame)
 {
     // Use a matrix
@@ -783,6 +873,9 @@ void PPSSim::LorentzBoost(TLorentzVector& p_out, const string& frame)
     p4lab = tmpboost * p4;
     p_out.SetPxPyPzE(p4lab(1,0),p4lab(2,0),p4lab(3,0),p4lab(0,0));
 }
+
+//--------------------------------------------------------------------------------------------------------------//
+
 void PPSSim::ApplyBeamSmearing(TLorentzVector& p_out)
 {
     double microrad = 1.e-6;
@@ -800,6 +893,9 @@ void PPSSim::ApplyBeamSmearing(TLorentzVector& p_out)
     double e  = sqrt(px*px+py*py+pz*pz+ProtonMassSQ);
     p_out.SetPxPyPzE(px,py,pz,e);
 }
+
+//--------------------------------------------------------------------------------------------------------------//
+
 void PPSSim::CrossingAngleCorrection(TLorentzVector& p_out)
 {
     double microrad = 1.e-6;
@@ -818,6 +914,9 @@ void PPSSim::CrossingAngleCorrection(TLorentzVector& p_out)
     double e  = sqrt(px*px+py*py+pz*pz+ProtonMassSQ);
     p_out.SetPxPyPzE(px,py,pz,e);
 }
+
+//--------------------------------------------------------------------------------------------------------------//
+
 void PPSSim::CrossingAngleCorrection(H_BeamParticle& p_out, const int Direction)
 {
     // 
@@ -831,6 +930,9 @@ void PPSSim::CrossingAngleCorrection(H_BeamParticle& p_out, const int Direction)
     p_out.set4Momentum(-Direction*p.Px(),p.Py(),Direction*p.Pz(),p.E());
     return;
 }
+
+//--------------------------------------------------------------------------------------------------------------//
+
 TLorentzVector PPSSim::shoot(const double& t,const double& xi, const double& phi,const int Direction)
 {
     long double energy=fBeamEnergy*(1.-xi);
@@ -841,6 +943,9 @@ TLorentzVector PPSSim::shoot(const double& t,const double& xi, const double& phi
     long double pz = partP*cos(theta)*Direction;
     return TLorentzVector((double)px,(double)py,(double)pz,(double)energy);
 }
+
+//--------------------------------------------------------------------------------------------------------------//
+
 void PPSSim::Propagate(H_BeamParticle* pbeam,int Direction) {
     PPSSimData* arm = NULL;
     H_BeamLine* beamline = NULL;
@@ -898,6 +1003,9 @@ void PPSSim::Propagate(H_BeamParticle* pbeam,int Direction) {
     arm->get_Track().set_HitToF(0,tof,xt,yt);
     arm->AddHitToF(0,tof,xt,yt);
 }
+
+//--------------------------------------------------------------------------------------------------------------//
+
 void PPSSim::SmearVertexPosition(double& vtxX,double& vtxY, double& vtxZ)
 {
     vtxX = fVtxMeanX;
@@ -909,6 +1017,9 @@ void PPSSim::SmearVertexPosition(double& vtxX,double& vtxY, double& vtxZ)
         vtxZ=gRandom3->Gaus(fVtxMeanZ,fVtxSigmaZ); // in cm
     }
 }
+
+//--------------------------------------------------------------------------------------------------------------//
+
 void PPSSim::HitSmearing(double& x, double& y, double& z)
 {
     //
@@ -922,12 +1033,17 @@ void PPSSim::HitSmearing(double& x, double& y, double& z)
     }
     return;
 }
+
+//--------------------------------------------------------------------------------------------------------------//
+
 double PPSSim::Minimum_t(const double& xi)
 {
     double partE = fBeamEnergy*(1.- xi);
     double partP = sqrt(partE*partE-ProtonMassSQ);
     return -2.*(fBeamMomentum*partP-fBeamEnergy*partE+ProtonMassSQ);
 }
+
+//--------------------------------------------------------------------------------------------------------------//
 
 void PPSSim::PrintParameters()
 {
@@ -968,6 +1084,8 @@ void PPSSim::PrintParameters()
         << "MinThetaYatDet1    = " <<fMinThetaYatDet1 << "\n"
         << "MaxThetaYatDet1    = " <<fMaxThetaYatDet1 << "\n";
 }
+
+//--------------------------------------------------------------------------------------------------------------//
 
 TH2F* PPSSim::GenBeamProfile(const double& z)
 {

@@ -1,5 +1,8 @@
 #include "FastSimulation/PPSFastSim/interface/PPSToFDetector.h"
 #include <math.h>
+
+//=====================================================================================================
+
 PPSToFDetector::PPSToFDetector(int ncellx,int ncelly, std::vector<double>& cellw,double cellh,double pitchx,double pitchy,double pos, int res):
         NCellX(ncellx),NCellY(ncelly),CellW(cellw),CellH(cellh),PitchX(pitchx),PitchY(pitchy),fToFResolution(res),DetPosition(pos) {
 // the vertical positions starts from the negative(bottom) to the positive(top) corner
@@ -19,6 +22,8 @@ PPSToFDetector::PPSToFDetector(int ncellx,int ncelly, std::vector<double>& cellw
      DetH=NCellY*CellH;
      DetW=-DetW-2*PitchX; 
 };
+
+//--------------------------------------------------------------------------------------------------------------//
 
 PPSToFDetector::PPSToFDetector(int ncellx,int ncelly, double cellwq,double cellh,double pitchx,double pitchy,double pos, int res):
         NCellX(ncellx),NCellY(ncelly),CellWq(cellwq),CellH(cellh),PitchX(pitchx),PitchY(pitchy),fToFResolution(res),DetPosition(pos) {
@@ -41,6 +46,9 @@ PPSToFDetector::PPSToFDetector(int ncellx,int ncelly, double cellwq,double cellh
         std::cout << i << " - DetPosition: " << DetPosition << " - DetW: "   << DetW << " - CellW: "  << CellWq <<  " - x1: "  << x1 << " - x2: "  << x2 << std::endl;  
      }
 };
+
+//--------------------------------------------------------------------------------------------------------------//
+
 void PPSToFDetector::AddHit(double x, double y, double tof) {
    X.push_back(x);
    Y.push_back(0.);
@@ -61,6 +69,9 @@ void PPSToFDetector::AddHit(double x, double y, double tof) {
    NHits++;
    nADC[cellid].push_back(1);
 }
+
+//--------------------------------------------------------------------------------------------------------------//
+
 int PPSToFDetector::findCellId(double x, double y)
 {
    int y_idx,x_idx;
@@ -81,6 +92,9 @@ int PPSToFDetector::findCellId(double x, double y)
    x_idx=i+1-start_idx;
    return 100*y_idx+x_idx;
 }
+
+//--------------------------------------------------------------------------------------------------------------//
+
 bool PPSToFDetector::get_CellCenter(int cell_id, double& x, double& y)
 {
    if (cell_id==0) return false;
