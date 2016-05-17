@@ -90,7 +90,7 @@ def customise(process):
                          HitSigmaY         = cms.double(10),
                          HitSigmaZ         = cms.double(0),
                          ToFHitSigmaX      = cms.double(150.0),
-                         ToFHitSigmaY      = cms.double(4200/sqrt(12)),
+                         ToFHitSigmaY      = cms.double(4200/math.sqrt(12)),
                          TimeSigma         = cms.double(0.08), #in ns
                          MinThetaXatDet1   = cms.double(-500.), #min. theta x at first tracker in urad
                          MaxThetaXatDet1   = cms.double(500.),   #max. theta x at first tracker in urad
