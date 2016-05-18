@@ -63,10 +63,8 @@ def customise(process):
                          )
 	ppssim_tofDiamond = cms.PSet(
                          ToFGeometry       = cms.string("diamond"),
-                         ToFCellWidth      = cms.untracked.vdouble(4.2, 4.2, 4.2, 4.2), # tof cell width in mm #move to vector - diamond geometry
-                         ToFCellHeight     = cms.double(4.2), # tof cell height in mm
-                         ToFNCellX         = cms.int32(4),      # number of cells in X
-                         ToFNCellY         = cms.int32(1),      # number of cells in Y
+                         TofWidth          = cms.double(4.2*4.),
+                         ToFHeight         = cms.double(4.2), # tof cell height in mm
                          )
 	ppssim_tofQuartz = cms.PSet(
                          ToFGeometry       = cms.string("quartz"),

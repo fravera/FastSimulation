@@ -77,6 +77,7 @@ class PPSSim {
         //     {fMaxXfromBeam=x;fMaxYfromBeam=y;fDetectorClosestX=c;};
         void set_TrackerLength(double p)     {fTrackerLength=p;};
         void set_TrackerSize(double w,double h) {fTrackerWidth=w;fTrackerHeight=h;};
+        void set_ToFSize(double w,double h) {fToFWidth=w;fToFHeight=h;};
         void set_ToFGeometry(std::string tofgeometry)   {fToFGeometry=tofgeometry;};
         void set_ToFCellSize(std::vector<double> w,double h)     {fToFCellW=w;fToFCellH=h;};
         void set_ToFPitch(double x, double y)       {fToFPitchX=x;fToFPitchY=y;};
@@ -222,13 +223,6 @@ class PPSSim {
         double         fToFWidth;
         double         fToFHeight;
         std::string    fToFGeometry;  
-        //double         fToFCellW;
-        std::vector<double> fToFCellW;
-        double         fToFCellH;
-        double         fToFPitchX;
-        double         fToFPitchY;
-        int            fToFNCellX;
-        int            fToFNCellY;
         double         fToFZPosition;
         double         fTrackerInsertion; // position of tracker during data taking (in number of sigmas)
         double         fToFInsertion;     // position of tof during data taking (in number of sigmas)

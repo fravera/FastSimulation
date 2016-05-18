@@ -106,15 +106,11 @@ PPSProducer::PPSProducer(const edm::ParameterSet& iConfig):fVerbose(false)
     double fTrackerZPosition   = iConfig.getParameter<double>("TrackerZPosition");
     double fTrackerWidth       = iConfig.getParameter<double>("TrackerWidth"); // tracker width in mm
     double fTrackerHeight      = iConfig.getParameter<double>("TrackerHeight"); // tracker height in mm
+    double fTofWidth           = iConfig.getParameter<double>("TofWidth"); // Tof width in mm
+    double fTofHeight          = iConfig.getParameter<double>("TofHeight"); // Tof height in mm
     double fTrackerInsertion   = iConfig.getParameter<double>("TrackerInsertion"); // Number of sigms (X) from the beam for the tracker
     double fToFInsertion       = iConfig.getParameter<double>("ToFInsertion");     // Number of sigms (X) from the beam for the tof
     string tofgeometry         = iConfig.getParameter<string>("ToFGeometry"); 
-    std::vector<double> fToFCellW = iConfig.getUntrackedParameter<std::vector<double> >("ToFCellWidth");      // tof  width in mm - diamond
-    double fToFCellH           = iConfig.getParameter<double>("ToFCellHeight");     // tof height in mm
-    double fToFPitchX          = iConfig.getParameter<double>("ToFPitchX");         // cell pitch in X (in microns)
-    double fToFPitchY          = iConfig.getParameter<double>("ToFPitchY");         // cell pitch in Y (in microns)
-    int    fToFNCellX          = iConfig.getParameter<int>("ToFNCellX");            // number of cells in X
-    int    fToFNCellY          = iConfig.getParameter<int>("ToFNCellY");            // number of cells in Y
     double fTrk1XOffset        = iConfig.getParameter<double>("TrkDet1XOffset");
     double fTrk2XOffset        = iConfig.getParameter<double>("TrkDet2XOffset");
     double fToFXOffset         = iConfig.getParameter<double>("ToFDetXOffset");
@@ -197,9 +193,7 @@ PPSProducer::PPSProducer(const edm::ParameterSet& iConfig):fVerbose(false)
     pps->set_ToFInsertion(fToFInsertion);
     pps->set_TrackerLength(fTrackerLength);
     pps->set_TrackerSize(fTrackerWidth,fTrackerHeight);
-    pps->set_ToFCellSize(fToFCellW,fToFCellH);
-    pps->set_ToFNCells(fToFNCellX,fToFNCellY);
-    pps->set_ToFPitch(fToFPitchX*um_to_mm,fToFPitchY*um_to_mm);
+    pps->set_ToFSize(fToFWidth,fToFHeight);
     pps->set_ToFZPosition(fToFZPosition);
     pps->set_ToFResolution(fTimeSigma,fToFHitSigmaX,fToFHitSigmaY);
     pps->set_TrackerEdgeOffset(fTrk1XOffset,fTrk2XOffset,fTrk1XOffset,fTrk2XOffset); // use the same offset for the forward and backward arm

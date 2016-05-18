@@ -9,6 +9,8 @@ void PPSTrkDetector::AddHit(double x, double y, double z)
      if (fabs(x)>DetectorWidth+DetectorPosition) return; // hit beyond detector area (W)
      if (fabs(x)<DetectorPosition) return;               // hit falls below detector area
      if (fabs(y)>DetectorHeight) return;                 // hit falls beyond detector area (H)
-     X.push_back(x);Y.push_back(y);Z.push_back(z);
+     X.push_back(x);
+     Y.push_back(y);
+     Z.push_back(z);
      NHits++;
 }
