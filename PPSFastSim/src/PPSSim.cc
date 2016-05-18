@@ -833,7 +833,7 @@ void PPSSim::ToFDigi(int Direction, const PPSBaseData* arm_sim,PPSToFDetector* T
         // double yc=0;
         // if (ToFDet->get_CellCenter(cellid,xc,yc)) arm_reco->AddHitToF(cellid,t,xc,yc);
         // else arm_reco->AddHitToF(cellid,t,0.,0.);
-        arm_reco->AddHitToF(0.,t,x,0.);
+        arm_reco->AddHitToF(t,x,0.);
         cout<<"ToF Digi smeared x = "<<x<<endl;
     }
 }
@@ -1049,7 +1049,7 @@ void PPSSim::Propagate(H_BeamParticle* pbeam,int Direction) {
     //
     double tof = (fToFZPosition-Direction*startZ)/c_light_ns;
     arm->get_Track().set_HitToF(tof,xt,yt);
-    arm->AddHitToF(0,tof,xt,yt);
+    arm->AddHitToF(tof,xt,yt);
 }
 
 //--------------------------------------------------------------------------------------------------------------//
