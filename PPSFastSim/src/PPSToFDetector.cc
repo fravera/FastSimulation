@@ -52,22 +52,23 @@ PPSToFDetector::PPSToFDetector(int ncellx,int ncelly, double cellwq,double cellh
 void PPSToFDetector::AddHit(double x, double y, double tof) {
    X.push_back(x);
    Y.push_back(0.);
-   int cellid = findCellId(x,y);
-   if (cellid==0) return;
-   if (ToFInfo.find(cellid)==ToFInfo.end()) ToFInfo[cellid]; // add empty cell
-   std::vector<double>* tofs = &(ToFInfo.find(cellid)->second);
-   int ntof = tofs->size();
-   int i=0;
-   for(;i<ntof;i++) {
-      if (fabs(tofs->at(i)-tof)/fToFResolution<3) {
-         tofs->at(i)=(tofs->at(i)+tof)/2.;
-         nADC.at(cellid).at(i)++;
-         return;
-      }
-   }
-   tofs->push_back(tof); // no other ToF inside resolution found
+   ToF.push_back(tof);
+   // int cellid = findCellId(x,y);
+   // if (cellid==0) return;
+   // if (ToFInfo.find(cellid)==ToFInfo.end()) ToFInfo[cellid]; // add empty cell
+   // std::vector<double>* tofs = &(ToFInfo.find(cellid)->second);
+   // int ntof = tofs->size();
+   // int i=0;
+   // for(;i<ntof;i++) {
+   //    if (fabs(tofs->at(i)-tof)/fToFResolution<3) {
+   //       tofs->at(i)=(tofs->at(i)+tof)/2.;
+   //       nADC.at(cellid).at(i)++;
+   //       return;
+   //    }
+   // }
+   // tofs->push_back(tof); // no other ToF inside resolution found
    NHits++;
-   nADC[cellid].push_back(1);
+   // nADC[cellid].push_back(1);
 }
 
 //--------------------------------------------------------------------------------------------------------------//

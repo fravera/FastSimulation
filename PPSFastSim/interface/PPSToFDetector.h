@@ -40,6 +40,7 @@ class PPSToFDetector {
             void clear() {DetId=0;NHits=0;ToFInfo.clear();};
             std::vector<double> X;
             std::vector<double> Y;
+            std::vector<double> ToF;
 
       private:
             int                 NCellX;

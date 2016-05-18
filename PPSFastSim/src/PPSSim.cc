@@ -499,12 +499,14 @@ bool PPSSim::SearchTrack( TGraphErrors *xLineProjection, TGraphErrors *yLineProj
 
     TF1 *xLine = new TF1("xLine","pol1",fTrackerZPosition,fToFZPosition);
     xLineProjection->Fit(xLine,"Q0");
-    xChiSquare = xLine->GetChisquare();
+    if(xLineProjection->GetN()>2) xChiSquare = xLine->GetChisquare();
+    else xChiSquare = 0.;
     //if(xLineProjection->GetN()>2 || xLine->GetChisquare()>5.) return false;
 
     TF1 *yLine = new TF1("yLine","pol1",fTrackerZPosition,fToFZPosition);
     yLineProjection->Fit(yLine,"Q0");
-    yChiSquare = yLine->GetChisquare();
+    if(yLineProjection->GetN()>2) yChiSquare = yLine->GetChisquare();
+    else yChiSquare = 0.;
     //if(yLineProjection->GetN()>2 || yLine->GetChisquare()>5.) return false;
 
     x1 = xLine->Eval(fTrackerZPosition);
@@ -641,44 +643,48 @@ void PPSSim::ToFReco()
 
     double vtxX,vtxY,vtxZ;
     double tofF,tofB,ToFtot,d_ToFtot;
-    double xt,yt;
-    int cellidF=0,cellidB=0;
+    double xtF,ytF,xtB,ytB;
+    // int cellidF=0,cellidB=0;
 
     d_ToFtot = sqrt(2.)*fTimeSigma; // uncertainty on ToFtot due to detector resolution
     int Nsigma = 3.0;              // # of sigmas (CL for vertex reconstruction)
 
     for(int i=0;i<(int)tracksF->size();i++){
-        ProjectToToF(tracksF->at(i).Det1.X,tracksF->at(i).Det1.Y,tracksF->at(i).Det2.X,tracksF->at(i).Det2.Y,xt,yt);
-        cellidF = ToFDet_F->findCellId(xt,yt);
+        ProjectToToF(tracksF->at(i).Det1.X,tracksF->at(i).Det1.Y,tracksF->at(i).Det2.X,tracksF->at(i).Det2.Y,xtF,ytF);
+        //cellidF = ToFDet_F->findCellId(xt,yt);
 
-        if (cellidF==0) continue;
+        //if (cellidF==0) continue;
         for(int j=0;j<(int)tracksB->size();j++) {
-            ProjectToToF(tracksB->at(j).Det1.X,tracksB->at(j).Det1.Y,tracksB->at(j).Det2.X,tracksB->at(j).Det2.Y,xt,yt);
-            cellidB = ToFDet_B->findCellId(xt,yt);
+            ProjectToToF(tracksB->at(j).Det1.X,tracksB->at(j).Det1.Y,tracksB->at(j).Det2.X,tracksB->at(j).Det2.Y,xtB,ytB);
+            // cellidB = ToFDet_B->findCellId(xt,yt);
 
-            if (cellidB==0) continue;
-            for(int k=0;k<ToFDet_F->GetMultiplicityByCell(cellidF);k++) {
-                tofF=ToFDet_F->get_ToF(cellidF).at(k);
-                if (ToFDet_F->GetADC(cellidF,k)==0) edm::LogWarning("debug") << "WARNING: no ADC found";
-                for(int l=0;l<ToFDet_B->GetMultiplicityByCell(cellidB);l++) {
-                    tofB=ToFDet_B->get_ToF(cellidB).at(l);
-                    if (ToFDet_B->GetADC(cellidB,l)==0) edm::LogWarning("debug") << "WARNING: no ADC found";
+            // if (cellidB==0) continue;
+            for(int k=0;k<ToFDet_F->get_NHits();k++) {
+                if(TMath::Abs(ToFDet_F->X.at(k)-xtF)>2.*fToFHitSigmaX*mm_to_um || TMath::Abs(ToFDet_F->Y.at(k)-ytF)>2.*fToFHitSigmaY*mm_to_um) continue;
+                tofF=ToFDet_F->ToF.at(k);
+                tracksF->at(i).set_HitToF(0,tofF,ToFDet_F->X.at(k),ToFDet_F->Y.at(k));
+                //tofF=ToFDet_F->get_ToF(cellidF).at(k);
+                // if (ToFDet_F->GetADC(cellidF,k)==0) edm::LogWarning("debug") << "WARNING: no ADC found";
+                for(int l=0;l<ToFDet_B->get_NHits();l++) {
+                    if(TMath::Abs(ToFDet_B->X.at(l)-xtB)>2.*fToFHitSigmaX*mm_to_um || TMath::Abs(ToFDet_B->Y.at(l)-ytB)>2.*fToFHitSigmaY*mm_to_um) continue;
+                    tofB=ToFDet_B->ToF.at(l);
+                    // if (ToFDet_B->GetADC(cellidB,l)==0) edm::LogWarning("debug") << "WARNING: no ADC found";
                     ToFtot = tofF+tofB;
                     if (fabs(ToFtot-2*fToFZPosition/c_light_ns)>Nsigma*d_ToFtot) continue;
                     vtxZ=-c_light_ns*(tofF-tofB)/2.0*m_to_cm;
                     vtxX=(tracksF->at(i).get_X0()+tracksB->at(j).get_X0())/2.; // this is not very meaningful, there is not enough precision
                     vtxY=(tracksF->at(i).get_Y0()+tracksB->at(j).get_Y0())/2.; // idem
-                    if (ToFDet_F->GetMultiplicityByCell(cellidF)==1&&ToFDet_B->GetMultiplicityByCell(cellidB)==1&&
-                            ToFDet_F->GetADC(cellidF,k)==1&&ToFDet_B->GetADC(cellidB,l)==1) {
-                        double xc=0.,yc=0.;
-                        ToFDet_F->get_CellCenter(cellidF,xc,yc);
-                        tracksF->at(i).set_HitToF(cellidF,tofF,xc,yc);// Add this information only for vertices
-                        ToFDet_B->get_CellCenter(cellidB,xc,yc);
-                        tracksB->at(j).set_HitToF(cellidB,tofB,xc,yc);// without ambiguities, using the tof cell center
-                        vtxs->AddGolden(vtxX,vtxY,vtxZ,i,j);
-                    } else {
-                        vtxs->Add(vtxX,vtxY,vtxZ,i,j);
-                    }
+                    // if (ToFDet_F->GetMultiplicityByCell(cellidF)==1&&ToFDet_B->GetMultiplicityByCell(cellidB)==1&&
+                    //         ToFDet_F->GetADC(cellidF,k)==1&&ToFDet_B->GetADC(cellidB,l)==1) {
+                    //     double xc=0.,yc=0.;
+                    //     ToFDet_F->get_CellCenter(cellidF,xc,yc);
+                    //     tracksF->at(i).set_HitToF(cellidF,tofF,xc,yc);// Add this information only for vertices
+                    //     ToFDet_B->get_CellCenter(cellidB,xc,yc);
+                    //     tracksB->at(j).set_HitToF(cellidB,tofB,xc,yc);// without ambiguities, using the tof cell center
+                    //     vtxs->AddGolden(vtxX,vtxY,vtxZ,i,j);
+                    // } else {
+                    tracksB->at(i).set_HitToF(0,tofB,ToFDet_B->X.at(k),ToFDet_B->Y.at(k));
+                    vtxs->Add(vtxX,vtxY,vtxZ,i,j);
                 }
             }
         } 
@@ -825,8 +831,9 @@ void PPSSim::ToFDigi(int Direction, const PPSBaseData* arm_sim,PPSToFDetector* T
         double t = arm_sim->ToFDet.at(i).ToF;
         if (t>0) ToFSmearing(t);
         ToFDet->AddHit(x,y,t);
+        cout<<"ToF Digi x = "<<x<<endl;
         if (!arm_reco) continue;
-        int cellid = ToFDet->findCellId(x,y);
+        //int cellid = ToFDet->findCellId(x,y);
         //if (cellid==0) continue;
         // find x,y of the center of the cell
         x = gRandom3->Gaus(x,fToFHitSigmaX);
@@ -834,7 +841,8 @@ void PPSSim::ToFDigi(int Direction, const PPSBaseData* arm_sim,PPSToFDetector* T
         // double yc=0;
         // if (ToFDet->get_CellCenter(cellid,xc,yc)) arm_reco->AddHitToF(cellid,t,xc,yc);
         // else arm_reco->AddHitToF(cellid,t,0.,0.);
-        arm_reco->AddHitToF(cellid,t,x,0.);
+        arm_reco->AddHitToF(0.,t,x,0.);
+        cout<<"ToF Digi smeared x = "<<x<<endl;
     }
 }
 
