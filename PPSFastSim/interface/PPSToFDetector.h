@@ -10,8 +10,8 @@ class PPSToFDetector {
             PPSToFDetector(double detWidth, double detHeight, double detPosition);
             virtual ~PPSToFDetector() {};
 
-            double GetHeight()                       {return DetH;};
-            double GetWidth()                        {return DetW;};
+            double GetHeight()                       {return DetHeight;};
+            double GetWidth()                        {return DetWidth;};
             double GetPosition()                     {return DetPosition;};
             
             int get_NHits()                          {return NHits;}; // return the total hit multiplicity (full det)
@@ -31,8 +31,8 @@ class PPSToFDetector {
             std::vector<double> ToF;
 
       private:
-            double              DetW; // detector width
-            double              DetH; // detector height
+            double              DetWidth; // detector width
+            double              DetHeight; // detector height
             double              DetPosition; // detector position from beam (absolute value)
 
             int                 DetId;

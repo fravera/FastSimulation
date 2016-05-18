@@ -3,7 +3,7 @@
 
 //=====================================================================================================
 
-PPSToFDetector::PPSToFDetector(ouble detWidth, double detHeight, double detPosition):
+PPSToFDetector::PPSToFDetector(double detWidth, double detHeight, double detPosition):
         DetW(detHeight),DetH(detHeight),DetPosition(detPosition){
 };
 
