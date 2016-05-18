@@ -108,7 +108,7 @@ PPSProducer::PPSProducer(const edm::ParameterSet& iConfig):fVerbose(false)
     double fTrackerHeight      = iConfig.getParameter<double>("TrackerHeight"); // tracker height in mm
     double fTrackerInsertion   = iConfig.getParameter<double>("TrackerInsertion"); // Number of sigms (X) from the beam for the tracker
     double fToFInsertion       = iConfig.getParameter<double>("ToFInsertion");     // Number of sigms (X) from the beam for the tof
-    string tofgeometry          = iConfig.getParameter<string>("ToFGeometry"); 
+    string tofgeometry         = iConfig.getParameter<string>("ToFGeometry"); 
     std::vector<double> fToFCellW = iConfig.getUntrackedParameter<std::vector<double> >("ToFCellWidth");      // tof  width in mm - diamond
     double fToFCellH           = iConfig.getParameter<double>("ToFCellHeight");     // tof height in mm
     double fToFPitchX          = iConfig.getParameter<double>("ToFPitchX");         // cell pitch in X (in microns)
@@ -117,7 +117,7 @@ PPSProducer::PPSProducer(const edm::ParameterSet& iConfig):fVerbose(false)
     int    fToFNCellY          = iConfig.getParameter<int>("ToFNCellY");            // number of cells in Y
     double fTrk1XOffset        = iConfig.getParameter<double>("TrkDet1XOffset");
     double fTrk2XOffset        = iConfig.getParameter<double>("TrkDet2XOffset");
-    double fToFXOffset        = iConfig.getParameter<double>("ToFDetXOffset");
+    double fToFXOffset         = iConfig.getParameter<double>("ToFDetXOffset");
     double fToFZPosition       = iConfig.getParameter<double>("ToFZPosition");
     double fTCL4Position       = iConfig.getUntrackedParameter<double>("TCL4Position",0.);
     double fTCL5Position       = iConfig.getUntrackedParameter<double>("TCL5Position",0.);
@@ -132,9 +132,12 @@ PPSProducer::PPSProducer(const edm::ParameterSet& iConfig):fVerbose(false)
     bool   fSmearEnergy        = iConfig.getParameter<bool>("SmearEnergy");
     double fBeamEnergy         = iConfig.getParameter<double>("BeamEnergy");    // beam energy in GeV
     double fBeamEnergyRMS      = iConfig.getParameter<double>("BeamEnergyRMS");    // beam energy dispersion in GeV
-    double fBeamSizeAtTrk1     = iConfig.getParameter<double>("BeamSizeAtTrk1"); // beam sigma(X) at first tracker station in mm
-    double fBeamSizeAtTrk2     = iConfig.getParameter<double>("BeamSizeAtTrk2"); // beam sigma(X) at second tracker station in mm
-    double fBeamSizeAtToF      = iConfig.getParameter<double>("BeamSizeAtToF" ); // beam sigma(X) at timing station in mm
+    double fBeamSize_ArmF_Trk1     = iConfig.getParameter<double>("BeamSize_ArmF_Trk1"); // beam sigma(X) at Arm Forward first tracker station in mm
+    double fBeamSize_ArmF_Trk2     = iConfig.getParameter<double>("BeamSize_ArmF_Trk2"); // beam sigma(X) at Arm Forward second tracker station in mm
+    double fBeamSize_ArmF_ToF      = iConfig.getParameter<double>("BeamSize_ArmF_ToF" ); // beam sigma(X) at Arm Forward timing station in mm
+    double fBeamSize_ArmB_Trk1     = iConfig.getParameter<double>("BeamSize_ArmB_Trk1"); // beam sigma(X) at Arm Backward first tracker station in mm
+    double fBeamSize_ArmB_Trk2     = iConfig.getParameter<double>("BeamSize_ArmB_Trk2"); // beam sigma(X) at Arm Backward second tracker station in mm
+    double fBeamSize_ArmB_ToF      = iConfig.getParameter<double>("BeamSize_ArmB_ToF" ); // beam sigma(X) at Arm Backward timing station in mm
     double fPhiMin             = iConfig.getParameter<double>("PhiMin");
     double fPhiMax             = iConfig.getParameter<double>("PhiMax");
     double fCentralMass        = iConfig.getParameter<double>("CentralMass");
@@ -181,7 +184,7 @@ PPSProducer::PPSProducer(const edm::ParameterSet& iConfig):fVerbose(false)
     pps->set_BeamEnergyRMS(fBeamEnergyRMS);
     pps->set_BeamAngleSmearing(fSmearAngle);
     pps->set_BeamAngleRMS(fBeamAngleRMS);
-    pps->set_BeamXSizes(fBeamSizeAtTrk1,fBeamSizeAtTrk2,fBeamSizeAtToF);
+    pps->set_BeamXSizes(fBeamSize_ArmF_Trk1,fBeamSize_ArmF_Trk2,fBeamSize_ArmF_ToF,fBeamSize_ArmB_Trk1,fBeamSize_ArmB_Trk2,fBeamSize_ArmB_ToF);
     pps->set_TCLPosition("TCL4",fTCL4Position,fTCL4Position);
     pps->set_TCLPosition("TCL5",fTCL5Position,fTCL5Position);
     if (showbeam) pps->set_ShowBeamLine();

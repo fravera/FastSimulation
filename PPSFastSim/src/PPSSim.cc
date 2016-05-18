@@ -483,7 +483,7 @@ void PPSSim::Reconstruction()
 
 //--------------------------------------------------------------------------------------------------------------//
 
-bool PPSSim::SearchTrack( TGraphErrors *xLineProjection, TGraphErrors *yLineProjection ,int Direction,double& xi,double& t,double& partP,double& pt,double& thx,double& thy,double& x0, double& y0)
+bool PPSSim::SearchTrack( TGraphErrors *xLineProjection, TGraphErrors *yLineProjection ,int Direction,double& xi,double& t,double& partP,double& pt,double& thx,double& thy,double& x0, double& y0, double &xChiSquare, double &yChiSquare)
 {
     double theta=0.;
     xi = 0; t=0; partP=0; pt=0; x0=0.;y0=0.;
@@ -499,11 +499,13 @@ bool PPSSim::SearchTrack( TGraphErrors *xLineProjection, TGraphErrors *yLineProj
 
     TF1 *xLine = new TF1("xLine","pol1",fTrackerZPosition,fToFZPosition);
     xLineProjection->Fit(xLine,"Q0");
-    if(xLineProjection->GetN()>2 || xLine->GetChisquare()>5.) return false;
+    xChiSquare = xLine->GetChisquare();
+    //if(xLineProjection->GetN()>2 || xLine->GetChisquare()>5.) return false;
 
     TF1 *yLine = new TF1("yLine","pol1",fTrackerZPosition,fToFZPosition);
     yLineProjection->Fit(yLine,"Q0");
-    if(yLineProjection->GetN()>2 || yLine->GetChisquare()>5.) return false;
+    yChiSquare = yLine->GetChisquare();
+    //if(yLineProjection->GetN()>2 || yLine->GetChisquare()>5.) return false;
 
     x1 = xLine->Eval(fTrackerZPosition);
     x2 = xLine->Eval(fTrackerZPosition+fTrackerLength);
@@ -547,7 +549,7 @@ void PPSSim::TrackerReco(int Direction,H_RecRPObject* station,PPSBaseData* arm_b
 {
     //
     PPSRecoData* arm = dynamic_cast<PPSRecoData*>(arm_base);
-    double xi,t,partP,pt,phi,theta,x0,y0,thx,thy;
+    double xi,t,partP,pt,phi,theta,x0,y0,thx,thy,xChiSquare, yChiSquare;
     PPSTrkDetector* Trk1 = NULL;
     PPSTrkDetector* Trk2 = NULL;
     PPSToFDetector* ToF  = NULL;
@@ -586,11 +588,11 @@ void PPSSim::TrackerReco(int Direction,H_RecRPObject* station,PPSBaseData* arm_b
                     yPointsError.push_back(fHitSigmaY);
                 }
                 if(k<ToF->get_NHits() && fUseToFForTracking){
-                    xPoints.push_back(ToF->X.at(i));
-                    yPoints.push_back(ToF->Y.at(i));
+                    xPoints.push_back(ToF->X.at(i)*mm_to_um);
+                    yPoints.push_back(ToF->Y.at(i)*mm_to_um);
                     zPoints.push_back(fToFZPosition);
-                    xPointsError.push_back(fToFHitSigmaX);
-                    yPointsError.push_back(fToFHitSigmaY);
+                    xPointsError.push_back(fToFHitSigmaX*mm_to_um);
+                    yPointsError.push_back(fToFHitSigmaY*mm_to_um);
                 }
 
                 if(xPoints.size()<2) continue;
@@ -598,7 +600,7 @@ void PPSSim::TrackerReco(int Direction,H_RecRPObject* station,PPSBaseData* arm_b
                 TGraphErrors *xLineProjection = new TGraphErrors(xPoints.size(), &(zPoints[0]), &(xPoints[0]), 0, &(xPointsError[0]));
                 TGraphErrors *yLineProjection = new TGraphErrors(xPoints.size(), &(zPoints[0]), &(yPoints[0]), 0, &(yPointsError[0]));
 
-                if (SearchTrack(xLineProjection,yLineProjection,Direction,xi,t,partP,pt,thx,thy,x0,y0)) {
+                if (SearchTrack(xLineProjection,yLineProjection,Direction,xi,t,partP,pt,thx,thy,x0,y0,xChiSquare,yChiSquare)) {
                     theta = sqrt(thx*thx+thy*thy)*urad;
                     phi   = (Direction>0)?-atan2(thy,-thx):atan2(thy,thx); // defined according to the positive direction
                     if (Direction<0) { theta=TMath::Pi()-theta; }

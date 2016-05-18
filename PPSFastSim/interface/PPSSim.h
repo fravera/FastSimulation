@@ -113,13 +113,13 @@ class PPSSim {
         void set_BeamEnergyRMS(double rms)        {fBeamEnergyRMS=rms;};
         void set_BeamAngleSmearing(bool f=false)  {fSmearAngle=f;};
         void set_BeamAngleRMS(double rms)         {fBeamAngleRMS=rms;};
-        void set_BeamXSizes(double bsig_det1,double bsig_det2,double bsig_tof) {
-            fBeamXRMS_ArmB_Trk1=bsig_det1;
-            fBeamXRMS_ArmB_Trk2=bsig_det2;
-            fBeamXRMS_ArmB_ToF=bsig_tof;
-            fBeamXRMS_ArmF_Trk1=bsig_det1;
-            fBeamXRMS_ArmF_Trk2=bsig_det2;
-            fBeamXRMS_ArmF_ToF=bsig_tof;
+        void set_BeamXSizes(double bsig_ArmF_det1,double bsig_ArmF_det2,double bsig_ArmF_tof,double bsig_ArmB_det1,double bsig_ArmB_det2,double bsig_ArmB_tof) {
+            fBeamXRMS_ArmB_Trk1=bsig_ArmF_det1;
+            fBeamXRMS_ArmB_Trk2=bsig_ArmF_det2;
+            fBeamXRMS_ArmB_ToF=bsig_ArmF_tof;
+            fBeamXRMS_ArmF_Trk1=bsig_ArmB_det1;
+            fBeamXRMS_ArmF_Trk2=bsig_ArmB_det2;
+            fBeamXRMS_ArmF_ToF=bsig_ArmB_tof;
         };
         void set_TrackerInsertion(double xpos) {fTrackerInsertion=xpos;};
         void set_ToFInsertion(double xpos)     {fToFInsertion=xpos;};
@@ -136,7 +136,7 @@ class PPSSim {
         void Generation();
         void Simulation();
         void Reconstruction();
-        bool SearchTrack(TGraphErrors *XLineProjection , TGraphErrors *YLineProjection ,int Direction,double& xi,double& t,double& partP,double& pt,double& thx,double& thy,double& x0,double& y0);
+        bool SearchTrack(TGraphErrors *XLineProjection , TGraphErrors *YLineProjection ,int Direction,double& xi,double& t,double& partP,double& pt,double& thx,double& thy,double& x0,double& y0, double &xChiSquare, double &yChiSquare);
         void TrackerReco(int Direction,H_RecRPObject* station,PPSBaseData* arm);
         void ToFReco();
         void Digitization();

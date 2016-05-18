@@ -50,11 +50,14 @@ def customise(process):
                          BeamEnergy     = cms.double(ecms/2.0),
                          BeamEnergyRMS  = cms.double(1.11e-4),
                          BeamAngleRMS   = cms.double(30.03), # in mrad
-                         BeamSizeAtTrk1 = cms.double(0.186), # beam sigma (X) at first  tracker station in mm
-                         BeamSizeAtTrk2 = cms.double(0.115), # beam sigma (X) at second tracker station in mm
-                         BeamSizeAtToF  = cms.double(0.113), # beam sigma (X) at timing station in mm
+                         BeamSize_ArmF_Trk1 = cms.double(0.175), # beam sigma (X) at Arm Forward first  tracker station in mm
+                         BeamSize_ArmF_Trk2 = cms.double(0.124), # beam sigma (X) at Arm Forward second tracker station in mm
+                         BeamSize_ArmF_ToF  = cms.double(0.113), # beam sigma (X) at Arm Forward timing station in mm
+                         BeamSize_ArmB_Trk1 = cms.double(0.186), # beam sigma (X) at Arm Backward first  tracker station in mm
+                         BeamSize_ArmB_Trk2 = cms.double(0.131), # beam sigma (X) at Arm Backward second tracker station in mm
+                         BeamSize_ArmB_ToF  = cms.double(0.107), # beam sigma (X) at Arm Backward timing station in mm
                          ShowBeamLine   = cms.untracked.bool(False),
-                         SimBeamProfile = cms.untracked.bool(True),
+                         SimBeamProfile = cms.untracked.bool(False),
                          CrossAngleCorr = cms.bool(useCR),
                          CrossingAngle  = cms.double(205.0) #in mrad
                          )

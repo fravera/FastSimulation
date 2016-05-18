@@ -20,6 +20,8 @@ public:
        void   set_X0(double x) {X0=x;};
        void   set_Y0(double y) {Y0=y;};
        void   set_Phi(double p) {phi=p;};
+       void   set_XTrackChiSquare(double chiSquare) {xTrackChi2 = chiSquare;};
+       void   set_YTrackChiSquare(double chiSquare) {yTrackChi2 = chiSquare;};
        double get_ImpPar() {return sqrt(X0*X0+Y0*Y0);};
        double get_X0() {return X0;}; 
        double get_Y0() {return Y0;}; 
@@ -32,6 +34,9 @@ public:
        double        thetaX;   // in urad
        double        thetaY;   // in urad
        double        phi;
+       double        xTrackChi2;
+       double        yTrackChi2;
+
 public:
 ClassDef(PPSRecoTrack,1);
 };
