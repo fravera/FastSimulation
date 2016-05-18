@@ -3,6 +3,7 @@
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 #include <TMatrixD.h>
 #include <TF1.h>
+#include <TFile.h>
 
 //=====================================================================================================
 
@@ -10,8 +11,8 @@ PPSSim::PPSSim(bool ext_gen): fExternalGenerator(ext_gen),
     fVerbose(false),NEvent(0),fGenMode(""),
     fBeamLine1File(""),fBeamLine2File(""),fBeam1Direction(1),fBeam2Direction(1),fShowBeamLine(false),
     fCollisionPoint(""),fBeamLineLength(500),fBeamEnergy(0),fBeamMomentum(0),
-    fBeamXRMS_ArmB_ToF(0.),fBeamXRMS_ArmB_Trk2(0.),fBeamXRMS_ArmB_ToF(0.),
-    fBeamXRMS_ArmF_ToF(0.),fBeamXRMS_ArmF_Trk2(0.),fBeamXRMS_ArmF_ToF(0.),
+    fBeamXRMS_ArmF_Trk1(0.),fBeamXRMS_ArmF_Trk2(0.),fBeamXRMS_ArmF_ToF(0.),
+    fBeamXRMS_ArmB_Trk1(0.),fBeamXRMS_ArmB_Trk2(0.),fBeamXRMS_ArmB_ToF(0.),
     fCrossingAngle(0.),fCrossAngleCorr(false),fKickersOFF(false),
     fDetectorClosestX(-2.),fMaxXfromBeam(-25),fMaxYfromBeam(10),
     fTrackerZPosition(0.),fTrackerLength(0.),fTrackerWidth(0.),fTrackerHeight(0.),
@@ -68,6 +69,9 @@ void PPSSim::BeginRun()
         }
     }
     if (fSimBeam) {
+
+        TFile beamProfilesFile("BeamProfiles.root","RECREATE");
+
         TH2F* hBeamProfileArmBTrk = new TH2F(*GenBeamProfile(-fTrackerZPosition));
         fBeamXRMS_ArmB_Trk1 = hBeamProfileArmBTrk->GetRMS(1);
         TH2F* hBeamProfileArmFTrk = new TH2F(*GenBeamProfile(fTrackerZPosition));
@@ -134,6 +138,9 @@ void PPSSim::BeginRun()
             fBeam2PosAtTCL5=make_pair<double,double>(h2->GetMean(1),h2->GetMean(2));
             fBeam2RMSAtTCL5=make_pair<double,double>(h2->GetRMS(1),h2->GetRMS(2));
         }
+
+        beamProfilesFile.Close();
+
     }
     // 
     fGen = new PPSSpectrometer<Gen>();
@@ -815,16 +822,17 @@ void PPSSim::ToFDigi(int Direction, const PPSBaseData* arm_sim,PPSToFDetector* T
         }
         double t = arm_sim->ToFDet.at(i).ToF;
         if (t>0) ToFSmearing(t);
-        x = gRandom3->Gaus(x,fToFHitSigmaX);
         ToFDet->AddHit(x,y,t);
         if (!arm_reco) continue;
         int cellid = ToFDet->findCellId(x,y);
-        if (cellid==0) continue;
+        //if (cellid==0) continue;
         // find x,y of the center of the cell
-        double xc=0;
-        double yc=0;
-        if (ToFDet->get_CellCenter(cellid,xc,yc)) arm_reco->AddHitToF(cellid,t,xc,yc);
-        else arm_reco->AddHitToF(cellid,t,0.,0.);
+        x = gRandom3->Gaus(x,fToFHitSigmaX);
+        // double xc=0;
+        // double yc=0;
+        // if (ToFDet->get_CellCenter(cellid,xc,yc)) arm_reco->AddHitToF(cellid,t,xc,yc);
+        // else arm_reco->AddHitToF(cellid,t,0.,0.);
+        arm_reco->AddHitToF(cellid,t,x,0.);
     }
 }
 

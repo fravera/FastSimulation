@@ -60,9 +60,9 @@ def customise(process):
                          )
 	ppssim_tofDiamond = cms.PSet(
                          ToFGeometry       = cms.string("diamond"),
-                         ToFCellWidth      = cms.untracked.vdouble(0.81, 0.91, 1.02, 1.16, 1.75, 2.35, 4.2, 4.2), # tof cell width in mm #move to vector - diamond geometry
+                         ToFCellWidth      = cms.untracked.vdouble(4.2, 4.2, 4.2, 4.2), # tof cell width in mm #move to vector - diamond geometry
                          ToFCellHeight     = cms.double(4.2), # tof cell height in mm
-                         ToFNCellX         = cms.int32(8),      # number of cells in X
+                         ToFNCellX         = cms.int32(4),      # number of cells in X
                          ToFNCellY         = cms.int32(1),      # number of cells in Y
                          )
 	ppssim_tofQuartz = cms.PSet(
@@ -89,8 +89,8 @@ def customise(process):
                          HitSigmaX         = cms.double(10),
                          HitSigmaY         = cms.double(10),
                          HitSigmaZ         = cms.double(0),
-                         ToFHitSigmaX      = cms.double(150.0),
-                         ToFHitSigmaY      = cms.double(4200/math.sqrt(12)),
+                         ToFHitSigmaX      = cms.double(0.15),
+                         ToFHitSigmaY      = cms.double(4.2/math.sqrt(12)),
                          TimeSigma         = cms.double(0.08), #in ns
                          MinThetaXatDet1   = cms.double(-500.), #min. theta x at first tracker in urad
                          MaxThetaXatDet1   = cms.double(500.),   #max. theta x at first tracker in urad
