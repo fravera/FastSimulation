@@ -654,7 +654,7 @@ void PPSSim::ToFReco()
             for(int k=0;k<ToFDet_F->get_NHits();k++) {
                 if(TMath::Abs(ToFDet_F->X.at(k)-xtF)>2.*fToFHitSigmaX*mm_to_um || TMath::Abs(ToFDet_F->Y.at(k)-ytF)>2.*fToFHitSigmaY*mm_to_um) continue;
                 tofF=ToFDet_F->ToF.at(k);
-                tracksF->at(i).set_HitToF(0,tofF,ToFDet_F->X.at(k),ToFDet_F->Y.at(k));
+                tracksF->at(i).set_HitToF(tofF,ToFDet_F->X.at(k),ToFDet_F->Y.at(k));
                 //tofF=ToFDet_F->get_ToF(cellidF).at(k);
                 // if (ToFDet_F->GetADC(cellidF,k)==0) edm::LogWarning("debug") << "WARNING: no ADC found";
                 for(int l=0;l<ToFDet_B->get_NHits();l++) {
@@ -675,7 +675,7 @@ void PPSSim::ToFReco()
                     //     tracksB->at(j).set_HitToF(cellidB,tofB,xc,yc);// without ambiguities, using the tof cell center
                     //     vtxs->AddGolden(vtxX,vtxY,vtxZ,i,j);
                     // } else {
-                    tracksB->at(i).set_HitToF(0,tofB,ToFDet_B->X.at(k),ToFDet_B->Y.at(k));
+                    tracksB->at(i).set_HitToF(tofB,ToFDet_B->X.at(k),ToFDet_B->Y.at(k));
                     vtxs->Add(vtxX,vtxY,vtxZ,i,j);
                 }
             }
@@ -1048,7 +1048,7 @@ void PPSSim::Propagate(H_BeamParticle* pbeam,int Direction) {
     if (stopped) return;
     //
     double tof = (fToFZPosition-Direction*startZ)/c_light_ns;
-    arm->get_Track().set_HitToF(0,tof,xt,yt);
+    arm->get_Track().set_HitToF(tof,xt,yt);
     arm->AddHitToF(0,tof,xt,yt);
 }
 
