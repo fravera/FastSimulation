@@ -79,9 +79,6 @@ class PPSSim {
         void set_TrackerSize(double w,double h) {fTrackerWidth=w;fTrackerHeight=h;};
         void set_ToFSize(double w,double h) {fToFWidth=w;fToFHeight=h;};
         void set_ToFGeometry(std::string tofgeometry)   {fToFGeometry=tofgeometry;};
-        void set_ToFCellSize(std::vector<double> w,double h)     {fToFCellW=w;fToFCellH=h;};
-        void set_ToFPitch(double x, double y)       {fToFPitchX=x;fToFPitchY=y;};
-        void set_ToFNCells(int x,int y)             {fToFNCellX=x;fToFNCellY=y;};
         void set_ToFZPosition(double p)       {fToFZPosition=p;};
         void set_TCLPosition(const string& tcl,double z1,double z2) {
             if (tcl=="TCL4")      {fTCL4Position1=z1;fTCL4Position2=z2;}
