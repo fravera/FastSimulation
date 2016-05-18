@@ -150,7 +150,6 @@ void PPSSim::BeginRun()
     PPSTrkDetector* det1 = new PPSTrkDetector(fTrackerWidth,fTrackerHeight,fTrackerInsertion*fBeamXRMS_ArmF_Trk1 + fTrk1XOffsetF);
     PPSTrkDetector* det2 = new PPSTrkDetector(fTrackerWidth,fTrackerHeight,fTrackerInsertion*fBeamXRMS_ArmF_Trk2 + fTrk2XOffsetF);
 
-    std::cout << fToFNCellX << " ----------------------  "  << fToFGeometry << std::endl; 
     TrkStation_F = new std::pair<PPSTrkDetector,PPSTrkDetector>(*det1,*det2);
     if(fToFGeometry=="diamond") {
         ToFDet_F  = new PPSToFDetector(fToFWidth,fToFHeight,fToFInsertion*fBeamXRMS_ArmF_ToF+fToFXOffsetF);

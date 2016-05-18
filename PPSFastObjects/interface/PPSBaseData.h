@@ -12,7 +12,7 @@ public:
 
       void AddHitTrk1(double x, double y) {TrkDet1.push_back(PPSTrackerHit(x,y));};
       void AddHitTrk2(double x, double y) {TrkDet2.push_back(PPSTrackerHit(x,y));};
-      void AddHitToF(int cellid,double tof,double x, double y){ToFDet.push_back(PPSToFHit(cellid,tof,x,y));};
+      void AddHitToF(double tof,double x, double y){ToFDet.push_back(PPSToFHit(tof,x,y));};
 
       virtual void clear() {TrkDet1.clear();TrkDet2.clear();ToFDet.clear();};
 

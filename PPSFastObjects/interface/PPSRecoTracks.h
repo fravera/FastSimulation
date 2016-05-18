@@ -15,7 +15,7 @@ public:
 
        void set_HitDet1(double x,double y) {Det1.set_Hit(x,y);};
        void set_HitDet2(double x,double y) {Det2.set_Hit(x,y);};
-       void set_HitToF(int cellid,double tof,double x, double y) {ToF.set_Hit(cellid,tof,x,y);};
+       void set_HitToF(double tof,double x, double y) {ToF.set_Hit(tof,x,y);};
        void set_ThetaAtIP(double thx,double thy) {thetaX=thx;thetaY=thy;};
        void   set_X0(double x) {X0=x;};
        void   set_Y0(double y) {Y0=y;};

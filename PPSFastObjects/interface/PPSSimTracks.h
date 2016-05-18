@@ -15,7 +15,7 @@ class PPSSimTrack:public PPSBaseTrack {
              void set_XatTCL5(double x) {XatTCL5=x;};
              void set_HitDet1(double x,double y) {Det1.set_Hit(x,y);};
              void set_HitDet2(double x,double y) {Det2.set_Hit(x,y);};
-             void set_HitToF(int cellid, double tof, double x,double y) {sToF.set_Hit(x,y);ToF.set_Hit(cellid,tof,x,y);};
+             void set_HitToF(double tof, double x,double y) {sToF.set_Hit(x,y);ToF.set_Hit(tof,x,y);};
 
              ~PPSSimTrack(){};
       private:
