@@ -491,12 +491,14 @@ bool PPSSim::SearchTrack( TGraphErrors *xLineProjection, TGraphErrors *yLineProj
 
     TF1 *xLine = new TF1("xLine","pol1",fTrackerZPosition,fToFZPosition);
     xLineProjection->Fit(xLine,"Q0");
+    cout<<"Direction "<<Direction<<" Line x chiSquare "<<xLine->GetChisquare()<<" number of points "<<xLineProjection->GetN()<<endl;
     if(xLineProjection->GetN()>2) xChiSquare = xLine->GetChisquare();
     else xChiSquare = 0.;
     //if(xLineProjection->GetN()>2 || xLine->GetChisquare()>5.) return false;
 
     TF1 *yLine = new TF1("yLine","pol1",fTrackerZPosition,fToFZPosition);
     yLineProjection->Fit(yLine,"Q0");
+    cout<<"Direction "<<Direction<<" Line y chiSquare "<<yLine->GetChisquare()<<" number of points "<<yLineProjection->GetN()<<endl;
     if(yLineProjection->GetN()>2) yChiSquare = yLine->GetChisquare();
     else yChiSquare = 0.;
     //if(yLineProjection->GetN()>2 || yLine->GetChisquare()>5.) return false;
@@ -573,6 +575,7 @@ void PPSSim::TrackerReco(int Direction,H_RecRPObject* station,PPSBaseData* arm_b
                     zPoints.push_back(fTrackerZPosition);
                     xPointsError.push_back(fHitSigmaX);
                     yPointsError.push_back(fHitSigmaY);
+                    cout<<"Direction "<<Direction<<" added point for Tracker 1: x = "<< xPoints.back() <<" +o- "<<xPointsError.back()<<" y = "<< yPoints.back() <<" +o- "<<yPointsError.back()<<endl;
                 }
                 if(j<Trk2->NHits){
                     xPoints.push_back(Trk2->X.at(i));
@@ -580,13 +583,15 @@ void PPSSim::TrackerReco(int Direction,H_RecRPObject* station,PPSBaseData* arm_b
                     zPoints.push_back(fTrackerZPosition+fTrackerLength);
                     xPointsError.push_back(fHitSigmaX);
                     yPointsError.push_back(fHitSigmaY);
+                    cout<<"Direction "<<Direction<<" added point for Tracker 2: x = "<< xPoints.back() <<" +o- "<<xPointsError.back()<<" y = "<< yPoints.back() <<" +o- "<<yPointsError.back()<<endl;
                 }
                 if(k<ToF->get_NHits() && fUseToFForTracking){
-                    xPoints.push_back(ToF->X.at(i)*mm_to_um);
-                    yPoints.push_back(ToF->Y.at(i)*mm_to_um);
+                    xPoints.push_back(ToF->X.at(i));
+                    yPoints.push_back(ToF->Y.at(i));
                     zPoints.push_back(fToFZPosition);
-                    xPointsError.push_back(fToFHitSigmaX*mm_to_um);
-                    yPointsError.push_back(fToFHitSigmaY*mm_to_um);
+                    xPointsError.push_back(fToFHitSigmaX);
+                    yPointsError.push_back(fToFHitSigmaY);
+                    cout<<"Direction "<<Direction<<" added point for ToF      : x = "<< xPoints.back() <<" +o- "<<xPointsError.back()<<" y = "<< yPoints.back() <<" +o- "<<yPointsError.back()<<endl;
                 }
 
                 if(xPoints.size()<2) continue;
@@ -612,6 +617,9 @@ void PPSSim::TrackerReco(int Direction,H_RecRPObject* station,PPSBaseData* arm_b
                     arm->get_Track().set_Y0(y0);
                     arm->get_Track().set_Phi(phi);
                     arm->get_Track().set_ThetaAtIP(thx,thy); // thx is given in CMS coordinates
+                    arm->get_Track().set_XTrackChiSquare(xChiSquare);
+                    arm->get_Track().set_YTrackChiSquare(yChiSquare);
+                       
                 }
 
                 delete xLineProjection;
