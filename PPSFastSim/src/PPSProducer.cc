@@ -106,8 +106,8 @@ PPSProducer::PPSProducer(const edm::ParameterSet& iConfig):fVerbose(false)
     double fTrackerZPosition   = iConfig.getParameter<double>("TrackerZPosition");
     double fTrackerWidth       = iConfig.getParameter<double>("TrackerWidth"); // tracker width in mm
     double fTrackerHeight      = iConfig.getParameter<double>("TrackerHeight"); // tracker height in mm
-    double fToFWidth           = iConfig.getParameter<double>("TofWidth"); // Tof width in mm
-    double fToFHeight          = iConfig.getParameter<double>("TofHeight"); // Tof height in mm
+    double fToFWidth           = iConfig.getParameter<double>("ToFWidth"); // Tof width in mm
+    double fToFHeight          = iConfig.getParameter<double>("ToFHeight"); // Tof height in mm
     double fTrackerInsertion   = iConfig.getParameter<double>("TrackerInsertion"); // Number of sigms (X) from the beam for the tracker
     double fToFInsertion       = iConfig.getParameter<double>("ToFInsertion");     // Number of sigms (X) from the beam for the tof
     string tofgeometry         = iConfig.getParameter<string>("ToFGeometry"); 
