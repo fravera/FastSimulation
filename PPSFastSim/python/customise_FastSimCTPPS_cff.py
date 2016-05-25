@@ -40,9 +40,9 @@ def customise(process):
 
 	print 'Setting CT-PPS FastSim'
 	ppssim_beam_options = cms.PSet(
-  			Verbosity = cms.untracked.int32(0),
-               	         Beam1File = cms.FileInPath("FastSimulation/PPSFastSim/data/LHCB1_Beta0.40_6.5TeV_CR205_v6.503.tfs"),
-                         Beam2File = cms.FileInPath("FastSimulation/PPSFastSim/data/LHCB2_Beta0.40_6.5TeV_CR205_v6.503.tfs"),
+  			             Verbosity = cms.untracked.int32(1),
+               	         Beam1File = cms.FileInPath("FastSimulation/PPSFastSim/data/LHCB1_Beta0.40_6.5TeV_CR185.tfs"),
+                         Beam2File = cms.FileInPath("FastSimulation/PPSFastSim/data/LHCB2_Beta0.40_6.5TeV_CR185.tfs"),
                          Beam1Direction = cms.int32(1),
                          Beam2Direction = cms.int32(1),
                          SmearEnergy    = cms.bool(E_smear),
@@ -57,9 +57,9 @@ def customise(process):
                          BeamSize_ArmB_Trk2 = cms.double(0.131), # beam sigma (X) at Arm Backward second tracker station in mm
                          BeamSize_ArmB_ToF  = cms.double(0.107), # beam sigma (X) at Arm Backward timing station in mm
                          ShowBeamLine   = cms.untracked.bool(False),
-                         SimBeamProfile = cms.untracked.bool(False),
+                         SimBeamProfile = cms.untracked.bool(True),
                          CrossAngleCorr = cms.bool(useCR),
-                         CrossingAngle  = cms.double(205.0) #in mrad
+                         CrossingAngle  = cms.double(185.0) #in mrad
                          )
 	ppssim_tofDiamond = cms.PSet(
                          ToFGeometry       = cms.string("diamond"),

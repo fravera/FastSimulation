@@ -614,8 +614,8 @@ void PPSSim::TrackReco(int Direction,H_RecRPObject* station,PPSBaseData* arm_bas
                     arm->AddTrack(p,t,xi);
 
                     if(i<Trk1->NHits) arm->get_Track().set_HitDet1(Trk1->X.at(i),Trk1->Y.at(i));
-                    if(j<Trk2->NHits) arm->get_Track().set_HitDet2(Trk2->X.at(j),Trk2->Y.at(j))
-                    f(k<ToF->get_NHits()) arm->get_Track().set_HitToF (ToF->ToF.at(k),ToF->X.at(k),ToF->X.at(k));
+                    if(j<Trk2->NHits) arm->get_Track().set_HitDet2(Trk2->X.at(j),Trk2->Y.at(j));
+                    if(k<ToF->get_NHits()) arm->get_Track().set_HitToF (ToF->ToF.at(k),ToF->X.at(k),ToF->X.at(k));
                     arm->get_Track().set_X0(x0);
                     arm->get_Track().set_Y0(y0);
                     arm->get_Track().set_Phi(phi);
@@ -647,16 +647,16 @@ void PPSSim::VertexReco()
 
     double vtxX,vtxY,vtxZ;
     double tofF,tofB,ToFtot,d_ToFtot;
-    double xtF,ytF,xtB,ytB;
+    // double xtF,ytF,xtB,ytB;
     // int cellidF=0,cellidB=0;
 
     d_ToFtot = sqrt(2.)*fTimeSigma; // uncertainty on ToFtot due to detector resolution
     int Nsigma = 3.0;              // # of sigmas (CL for vertex reconstruction)
 
     for(int i=0;i<(int)tracksF->size();i++){
-        tofF=tracksF.at(i)->get_TimeOfFlight();
+        tofF=tracksF->at(i).get_TimeOfFlight();
         for(int j=0;j<(int)tracksB->size();j++) {
-            tofB=tracksB.at(j)->get_TimeOfFlight();
+            tofB=tracksB->at(j).get_TimeOfFlight();
             // if (ToFDet_B->GetADC(cellidB,l)==0) edm::LogWarning("debug") << "WARNING: no ADC found";
             ToFtot = tofF+tofB;
             if (fabs(ToFtot-2*fToFZPosition/c_light_ns)>Nsigma*d_ToFtot) continue;

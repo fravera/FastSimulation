@@ -157,6 +157,7 @@ PPSAnalyzer::PPSAnalyzer(const edm::ParameterSet& iConfig)
    bool   fXTrackChiSquareCut = iConfig.getParameter<double>("XTrackChiSquareCut");
    bool   fYTrackChiSquareCut = iConfig.getParameter<double>("YTrackChiSquareCut");
    bool   fApplyFiducialCuts  = iConfig.getParameter<bool>("ApplyFiducialCuts");  // apply geometrical cuts in the hit position (Detector size)
+   bool   fUseToFForTracking  = iConfig.getParameter<bool>("UseToFForTracking"); 
           outFileName         = iConfig.getParameter<string>("OutputFile");
           gensrc              = iConfig.getUntrackedParameter<edm::InputTag>("genSource",edm::InputTag("genParticles"));
 
