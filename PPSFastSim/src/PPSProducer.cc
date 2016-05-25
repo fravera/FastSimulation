@@ -152,6 +152,8 @@ PPSProducer::PPSProducer(const edm::ParameterSet& iConfig):fVerbose(false)
     // double fMaxYfromBeam       = iConfig.getParameter<double>("MaxYfromBeam");    // maximum distance (Y) from beam a hit is accepted (in mm, positive, simetric)
     // double fDetectorClosestX   = iConfig.getParameter<double>("DetectorClosestX");// minimum distance (X) from beam a hit is accepted (in mm, negative)
     // bool   fFilterHitMap       = iConfig.getParameter<bool>("FilterHitMap");       // apply geometrical cuts in the hit position (RP window+distance from beam)
+    double   fXTrackChiSquareCut = iConfig.getParameter<double>("XTrackChiSquareCut");
+    double   fYTrackChiSquareCut = iConfig.getParameter<double>("YTrackChiSquareCut");
     bool   fApplyFiducialCuts  = iConfig.getParameter<bool>("ApplyFiducialCuts");  // apply geometrical cuts in the hit position (Detector size)
     bool   fUseToFForTracking  = iConfig.getParameter<bool>("UseToFForTracking"); 
 
@@ -215,6 +217,8 @@ PPSProducer::PPSProducer(const edm::ParameterSet& iConfig):fVerbose(false)
     pps->set_ThetaYRangeatDet1(fMinthy,fMaxthy);
     // pps->set_WindowForTrack(fMaxXfromBeam,fMaxYfromBeam,fDetectorClosestX);
     // pps->set_FilterHitMap(fFilterHitMap);
+    pps->set_XTrackChiSquareCut(fXTrackChiSquareCut);
+    pps->set_YTrackChiSquareCut(fYTrackChiSquareCut);
     pps->set_ApplyFiducialCuts(fApplyFiducialCuts);
     pps->set_UseToFForTracking(fUseToFForTracking);
 }
