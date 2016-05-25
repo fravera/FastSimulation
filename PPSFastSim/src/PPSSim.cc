@@ -26,6 +26,7 @@ PPSSim::PPSSim(bool ext_gen): fExternalGenerator(ext_gen),
     fFilterHitMap(true),fApplyFiducialCuts(true),
     fTrackImpactParameterCut(0.),fMinThetaXatDet1(-200),fMaxThetaXatDet1(200),
     fMinThetaYatDet1(-200),fMaxThetaYatDet1(200),
+    fXTrackChiSquareCut(0.),fYTrackChiSquareCut(0.),fUseToFForTracking(false),
     xi_min(0.),xi_max(0.),t_min(0.),t_max(0.),fPhiMin(-TMath::Pi()),fPhiMax(TMath::Pi()),
     fEtaMin(7.),fMomentumMin(3000.),fCentralMass(0.),fCentralMassErr(0.),
     CheckPoints(),fSimBeam(false)
@@ -467,10 +468,10 @@ void PPSSim::Reconstruction()
 {
     int Direction;
     Direction=1;
-    TrackerReco(Direction,pps_stationF,&(fReco->ArmF));
+    TrackReco(Direction,pps_stationF,&(fReco->ArmF));
     Direction=-1;
-    TrackerReco(Direction,pps_stationB,&(fReco->ArmB));
-    ToFReco();
+    TrackReco(Direction,pps_stationB,&(fReco->ArmB));
+    VertexReco();
 }
 
 //--------------------------------------------------------------------------------------------------------------//
@@ -494,14 +495,14 @@ bool PPSSim::SearchTrack( TGraphErrors *xLineProjection, TGraphErrors *yLineProj
     cout<<"Direction "<<Direction<<" Line x chiSquare "<<xLine->GetChisquare()<<" number of points "<<xLineProjection->GetN()<<endl;
     if(xLineProjection->GetN()>2) xChiSquare = xLine->GetChisquare();
     else xChiSquare = 0.;
-    //if(xLineProjection->GetN()>2 || xLine->GetChisquare()>5.) return false;
+    if(xLineProjection->GetN()>2 || xLine->GetChisquare()>fXTrackChiSquareCut) return false;
 
     TF1 *yLine = new TF1("yLine","pol1",fTrackerZPosition,fToFZPosition);
     yLineProjection->Fit(yLine,"Q0");
     cout<<"Direction "<<Direction<<" Line y chiSquare "<<yLine->GetChisquare()<<" number of points "<<yLineProjection->GetN()<<endl;
     if(yLineProjection->GetN()>2) yChiSquare = yLine->GetChisquare();
     else yChiSquare = 0.;
-    //if(yLineProjection->GetN()>2 || yLine->GetChisquare()>5.) return false;
+    if(yLineProjection->GetN()>2 || yLine->GetChisquare()>fYTrackChiSquareCut) return false;
 
     x1 = xLine->Eval(fTrackerZPosition);
     x2 = xLine->Eval(fTrackerZPosition+fTrackerLength);
@@ -541,7 +542,7 @@ bool PPSSim::SearchTrack( TGraphErrors *xLineProjection, TGraphErrors *yLineProj
 
 //--------------------------------------------------------------------------------------------------------------//
 
-void PPSSim::TrackerReco(int Direction,H_RecRPObject* station,PPSBaseData* arm_base)
+void PPSSim::TrackReco(int Direction,H_RecRPObject* station,PPSBaseData* arm_base)
 {
     //
     PPSRecoData* arm = dynamic_cast<PPSRecoData*>(arm_base);
@@ -578,16 +579,16 @@ void PPSSim::TrackerReco(int Direction,H_RecRPObject* station,PPSBaseData* arm_b
                     cout<<"Direction "<<Direction<<" added point for Tracker 1: x = "<< xPoints.back() <<" +o- "<<xPointsError.back()<<" y = "<< yPoints.back() <<" +o- "<<yPointsError.back()<<endl;
                 }
                 if(j<Trk2->NHits){
-                    xPoints.push_back(Trk2->X.at(i));
-                    yPoints.push_back(Trk2->Y.at(i));
+                    xPoints.push_back(Trk2->X.at(j));
+                    yPoints.push_back(Trk2->Y.at(j));
                     zPoints.push_back(fTrackerZPosition+fTrackerLength);
                     xPointsError.push_back(fHitSigmaX);
                     yPointsError.push_back(fHitSigmaY);
                     cout<<"Direction "<<Direction<<" added point for Tracker 2: x = "<< xPoints.back() <<" +o- "<<xPointsError.back()<<" y = "<< yPoints.back() <<" +o- "<<yPointsError.back()<<endl;
                 }
                 if(k<ToF->get_NHits() && fUseToFForTracking){
-                    xPoints.push_back(ToF->X.at(i));
-                    yPoints.push_back(ToF->Y.at(i));
+                    xPoints.push_back(ToF->X.at(k));
+                    yPoints.push_back(ToF->Y.at(k));
                     zPoints.push_back(fToFZPosition);
                     xPointsError.push_back(fToFHitSigmaX);
                     yPointsError.push_back(fToFHitSigmaY);
@@ -613,12 +614,14 @@ void PPSSim::TrackerReco(int Direction,H_RecRPObject* station,PPSBaseData* arm_b
                     arm->AddTrack(p,t,xi);
                     arm->get_Track().set_HitDet1(Trk1->X.at(i),Trk1->Y.at(i));
                     arm->get_Track().set_HitDet2(Trk2->X.at(j),Trk2->Y.at(j));
+                    arm->get_Track().set_HitToF (ToF->ToF.at(k),ToF->X.at(k),ToF->X.at(k));
                     arm->get_Track().set_X0(x0);
                     arm->get_Track().set_Y0(y0);
                     arm->get_Track().set_Phi(phi);
                     arm->get_Track().set_ThetaAtIP(thx,thy); // thx is given in CMS coordinates
                     arm->get_Track().set_XTrackChiSquare(xChiSquare);
                     arm->get_Track().set_YTrackChiSquare(yChiSquare);
+                    arm->get_Track().set_TimeOfFlight(ToF->ToF.at(k));
                        
                 }
 
@@ -632,7 +635,7 @@ void PPSSim::TrackerReco(int Direction,H_RecRPObject* station,PPSBaseData* arm_b
 
 //--------------------------------------------------------------------------------------------------------------//
 
-void PPSSim::ToFReco()
+void PPSSim::VertexReco()
 {
     PPSRecoTracks* tracksF=&(fReco->ArmF.Tracks);
     if (tracksF->size()==0) return;
@@ -650,43 +653,16 @@ void PPSSim::ToFReco()
     int Nsigma = 3.0;              // # of sigmas (CL for vertex reconstruction)
 
     for(int i=0;i<(int)tracksF->size();i++){
-        ProjectToToF(tracksF->at(i).Det1.X,tracksF->at(i).Det1.Y,tracksF->at(i).Det2.X,tracksF->at(i).Det2.Y,xtF,ytF);
-        //cellidF = ToFDet_F->findCellId(xt,yt);
-
-        //if (cellidF==0) continue;
+        tofF=tracksF.at(i)->get_TimeOfFlight();
         for(int j=0;j<(int)tracksB->size();j++) {
-            ProjectToToF(tracksB->at(j).Det1.X,tracksB->at(j).Det1.Y,tracksB->at(j).Det2.X,tracksB->at(j).Det2.Y,xtB,ytB);
-            // cellidB = ToFDet_B->findCellId(xt,yt);
-
-            // if (cellidB==0) continue;
-            for(int k=0;k<ToFDet_F->get_NHits();k++) {
-                if(TMath::Abs(ToFDet_F->X.at(k)-xtF)>2.*fToFHitSigmaX*mm_to_um || TMath::Abs(ToFDet_F->Y.at(k)-ytF)>2.*fToFHitSigmaY*mm_to_um) continue;
-                tofF=ToFDet_F->ToF.at(k);
-                tracksF->at(i).set_HitToF(tofF,ToFDet_F->X.at(k),ToFDet_F->Y.at(k));
-                //tofF=ToFDet_F->get_ToF(cellidF).at(k);
-                // if (ToFDet_F->GetADC(cellidF,k)==0) edm::LogWarning("debug") << "WARNING: no ADC found";
-                for(int l=0;l<ToFDet_B->get_NHits();l++) {
-                    if(TMath::Abs(ToFDet_B->X.at(l)-xtB)>2.*fToFHitSigmaX*mm_to_um || TMath::Abs(ToFDet_B->Y.at(l)-ytB)>2.*fToFHitSigmaY*mm_to_um) continue;
-                    tofB=ToFDet_B->ToF.at(l);
-                    // if (ToFDet_B->GetADC(cellidB,l)==0) edm::LogWarning("debug") << "WARNING: no ADC found";
-                    ToFtot = tofF+tofB;
-                    if (fabs(ToFtot-2*fToFZPosition/c_light_ns)>Nsigma*d_ToFtot) continue;
-                    vtxZ=-c_light_ns*(tofF-tofB)/2.0*m_to_cm;
-                    vtxX=(tracksF->at(i).get_X0()+tracksB->at(j).get_X0())/2.; // this is not very meaningful, there is not enough precision
-                    vtxY=(tracksF->at(i).get_Y0()+tracksB->at(j).get_Y0())/2.; // idem
-                    // if (ToFDet_F->GetMultiplicityByCell(cellidF)==1&&ToFDet_B->GetMultiplicityByCell(cellidB)==1&&
-                    //         ToFDet_F->GetADC(cellidF,k)==1&&ToFDet_B->GetADC(cellidB,l)==1) {
-                    //     double xc=0.,yc=0.;
-                    //     ToFDet_F->get_CellCenter(cellidF,xc,yc);
-                    //     tracksF->at(i).set_HitToF(cellidF,tofF,xc,yc);// Add this information only for vertices
-                    //     ToFDet_B->get_CellCenter(cellidB,xc,yc);
-                    //     tracksB->at(j).set_HitToF(cellidB,tofB,xc,yc);// without ambiguities, using the tof cell center
-                    //     vtxs->AddGolden(vtxX,vtxY,vtxZ,i,j);
-                    // } else {
-                    tracksB->at(i).set_HitToF(tofB,ToFDet_B->X.at(k),ToFDet_B->Y.at(k));
-                    vtxs->Add(vtxX,vtxY,vtxZ,i,j);
-                }
-            }
+            tofB=tracksB.at(j)->get_TimeOfFlight();
+            // if (ToFDet_B->GetADC(cellidB,l)==0) edm::LogWarning("debug") << "WARNING: no ADC found";
+            ToFtot = tofF+tofB;
+            if (fabs(ToFtot-2*fToFZPosition/c_light_ns)>Nsigma*d_ToFtot) continue;
+            vtxZ=-c_light_ns*(tofF-tofB)/2.0*m_to_cm;
+            vtxX=(tracksF->at(i).get_X0()+tracksB->at(j).get_X0())/2.; // this is not very meaningful, there is not enough precision
+            vtxY=(tracksF->at(i).get_Y0()+tracksB->at(j).get_Y0())/2.; // idem
+            vtxs->Add(vtxX,vtxY,vtxZ,i,j);
         } 
     } 
 }

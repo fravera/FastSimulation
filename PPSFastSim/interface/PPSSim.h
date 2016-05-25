@@ -135,8 +135,8 @@ class PPSSim {
         void Simulation();
         void Reconstruction();
         bool SearchTrack(TGraphErrors *XLineProjection , TGraphErrors *YLineProjection ,int Direction,double& xi,double& t,double& partP,double& pt,double& thx,double& thy,double& x0,double& y0, double &xChiSquare, double &yChiSquare);
-        void TrackerReco(int Direction,H_RecRPObject* station,PPSBaseData* arm);
-        void ToFReco();
+        void TrackReco(int Direction,H_RecRPObject* station,PPSBaseData* arm);
+        void VertexReco();
         void Digitization();
         void TrackerDigi(int Direction, const PPSBaseData*,PPSTrkStation*);
         void ToFDigi(int Direction, const PPSBaseData*,PPSToFDetector*);
@@ -158,6 +158,8 @@ class PPSSim {
         void PrintParameters();
         void HitSmearing(double& x, double& y, double& z);
         void ToFSmearing(double& t) {if (fSmearHit) t = gRandom3->Gaus(t,fTimeSigma);};
+        void set_XTrackChiSquareCut(double xTrackChiSquareCut) {fXTrackChiSquareCut=xTrackChiSquareCut;};
+        void set_YTrackChiSquareCut(double yTrackChiSquareCut) {fYTrackChiSquareCut=yTrackChiSquareCut;};
         double Minimum_t(const double& xi);
 
         bool isPhysical(const double& xi)    { return (Minimum_t(xi) < t_max)&&xi<=1.&&xi>=0; }
@@ -284,6 +286,8 @@ class PPSSim {
         double fMaxThetaXatDet1;         // maximum thetaX at first tracker detector in urad
         double fMinThetaYatDet1;         // minimum thetaY at first tracker detector in urad
         double fMaxThetaYatDet1;         // maximum thetaY at first tracker detector in urad
+        double fXTrackChiSquareCut;
+        double fYTrackChiSquareCut;
         bool   fUseToFForTracking;
 
         // Parameters for the simulation
