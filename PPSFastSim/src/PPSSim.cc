@@ -611,8 +611,8 @@ void PPSSim::TrackerReco(int Direction,H_RecRPObject* station,PPSBaseData* arm_b
                     if (fCrossAngleCorr) LorentzBoost(p,"MC");
                     Get_t_and_xi(const_cast<TLorentzVector*>(&p),t,xi);
                     arm->AddTrack(p,t,xi);
-                    arm->get_Track().set_HitDet1(Trk1->X.at(i),Trk1->Y.at(i));
-                    arm->get_Track().set_HitDet2(Trk2->X.at(j),Trk2->Y.at(j));
+                    if(i<Trk1->NHits) arm->get_Track().set_HitDet1(Trk1->X.at(i),Trk1->Y.at(i));
+                    if(j<Trk2->NHits) arm->get_Track().set_HitDet2(Trk2->X.at(j),Trk2->Y.at(j));
                     arm->get_Track().set_X0(x0);
                     arm->get_Track().set_Y0(y0);
                     arm->get_Track().set_Phi(phi);
@@ -831,7 +831,7 @@ void PPSSim::ToFDigi(int Direction, const PPSBaseData* arm_sim,PPSToFDetector* T
         double t = arm_sim->ToFDet.at(i).ToF;
         if (t>0) ToFSmearing(t);
         ToFDet->AddHit(x,y,t);
-        cout<<"ToF Digi x = "<<x<<endl;
+        //cout<<"ToF Digi x = "<<x<<endl;
         if (!arm_reco) continue;
         //int cellid = ToFDet->findCellId(x,y);
         //if (cellid==0) continue;
@@ -842,7 +842,7 @@ void PPSSim::ToFDigi(int Direction, const PPSBaseData* arm_sim,PPSToFDetector* T
         // if (ToFDet->get_CellCenter(cellid,xc,yc)) arm_reco->AddHitToF(cellid,t,xc,yc);
         // else arm_reco->AddHitToF(cellid,t,0.,0.);
         arm_reco->AddHitToF(t,x,0.);
-        cout<<"ToF Digi smeared x = "<<x<<endl;
+        //cout<<"ToF Digi smeared x = "<<x<<endl;
     }
 }
 
