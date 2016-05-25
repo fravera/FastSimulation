@@ -43,7 +43,7 @@ public:
        double        timeOfFlight;
 
 public:
-ClassDef(PPSRecoTrack,1);
+ClassDef(PPSRecoTrack,2);
 };
 typedef std::vector<PPSRecoTrack> PPSRecoTracks;
 #endif
