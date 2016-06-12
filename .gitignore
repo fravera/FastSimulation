@@ -5,3 +5,7 @@ PPSValidation/python/ConfFile_cfg.pyc
 PPSValidation/python/ValidationCMSPPS_cfg.pyc
 PPSValidation/python/Validation_CMS_PPS_cfg.pyc
 PPSValidation/python/__init__.pyc
+PPSFastSim/python/customise_FastSimCTPPS_miniAOD_cff.pyc
+Workspace/Config/python/__init__.pyc
+Workspace/Config/python/customise_PPS_VtxMean.pyc
+

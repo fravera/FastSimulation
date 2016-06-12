@@ -101,14 +101,14 @@ void PPSSim::BeginRun()
         }
 
         TH2F* hBeamProfileToF = GenBeamProfile(fToFZPosition);
-        fBeamXRMS_ArmB_ToF = hBeamProfileToF->GetRMS(1);
-        if (hBeamProfileToF) {hBeamProfileToF->SetName("BeamProfileB_ToF");
+        fBeamXRMS_ArmF_ToF = hBeamProfileToF->GetRMS(1);
+        if (hBeamProfileToF) {hBeamProfileToF->SetName("BeamProfileF_ToF");
             hBeamProfileToF->Write();
             delete hBeamProfileToF;
         }
         hBeamProfileToF = GenBeamProfile(-fToFZPosition);
-        fBeamXRMS_ArmF_ToF = hBeamProfileToF->GetRMS(1);
-        if (hBeamProfileToF) {hBeamProfileToF->SetName("BeamProfileF_ToF");
+        fBeamXRMS_ArmB_ToF = hBeamProfileToF->GetRMS(1);
+        if (hBeamProfileToF) {hBeamProfileToF->SetName("BeamProfileB_ToF");
             hBeamProfileToF->Write();
             delete hBeamProfileToF;
         }
@@ -492,14 +492,14 @@ bool PPSSim::SearchTrack( TGraphErrors *xLineProjection, TGraphErrors *yLineProj
 
     TF1 *xLine = new TF1("xLine","pol1",fTrackerZPosition,fToFZPosition);
     xLineProjection->Fit(xLine,"Q0");
-    cout<<"Direction "<<Direction<<" Line x chiSquare "<<xLine->GetChisquare()<<" number of points "<<xLineProjection->GetN()<<endl;
+    if (fVerbose) edm::LogWarning("debug") << "Direction "<<Direction<<" Line x chiSquare "<<xLine->GetChisquare()<<" number of points "<<xLineProjection->GetN();
     if(xLineProjection->GetN()>2) xChiSquare = xLine->GetChisquare();
     else xChiSquare = 0.;
     if(xLineProjection->GetN()>2 || xLine->GetChisquare()>fXTrackChiSquareCut) return false;
 
     TF1 *yLine = new TF1("yLine","pol1",fTrackerZPosition,fToFZPosition);
     yLineProjection->Fit(yLine,"Q0");
-    cout<<"Direction "<<Direction<<" Line y chiSquare "<<yLine->GetChisquare()<<" number of points "<<yLineProjection->GetN()<<endl;
+    if (fVerbose) edm::LogWarning("debug") <<"Direction "<<Direction<<" Line y chiSquare "<<yLine->GetChisquare()<<" number of points "<<yLineProjection->GetN();
     if(yLineProjection->GetN()>2) yChiSquare = yLine->GetChisquare();
     else yChiSquare = 0.;
     if(yLineProjection->GetN()>2 || yLine->GetChisquare()>fYTrackChiSquareCut) return false;
@@ -576,7 +576,7 @@ void PPSSim::TrackReco(int Direction,H_RecRPObject* station,PPSBaseData* arm_bas
                     zPoints.push_back(fTrackerZPosition);
                     xPointsError.push_back(fHitSigmaX);
                     yPointsError.push_back(fHitSigmaY);
-                    cout<<"Direction "<<Direction<<" added point for Tracker 1: x = "<< xPoints.back() <<" +o- "<<xPointsError.back()<<" y = "<< yPoints.back() <<" +o- "<<yPointsError.back()<<endl;
+                    if (fVerbose) edm::LogWarning("debug") <<"Direction "<<Direction<<" added point for Tracker 1: x = "<< xPoints.back() <<" +o- "<<xPointsError.back()<<" y = "<< yPoints.back() <<" +o- "<<yPointsError.back();
                 }
                 if(j<Trk2->NHits){
                     xPoints.push_back(Trk2->X.at(j));
@@ -584,7 +584,7 @@ void PPSSim::TrackReco(int Direction,H_RecRPObject* station,PPSBaseData* arm_bas
                     zPoints.push_back(fTrackerZPosition+fTrackerLength);
                     xPointsError.push_back(fHitSigmaX);
                     yPointsError.push_back(fHitSigmaY);
-                    cout<<"Direction "<<Direction<<" added point for Tracker 2: x = "<< xPoints.back() <<" +o- "<<xPointsError.back()<<" y = "<< yPoints.back() <<" +o- "<<yPointsError.back()<<endl;
+                    if (fVerbose) edm::LogWarning("debug") <<"Direction "<<Direction<<" added point for Tracker 2: x = "<< xPoints.back() <<" +o- "<<xPointsError.back()<<" y = "<< yPoints.back() <<" +o- "<<yPointsError.back();
                 }
                 if(k<ToF->get_NHits() && fUseToFForTracking){
                     xPoints.push_back(ToF->X.at(k));
@@ -592,7 +592,7 @@ void PPSSim::TrackReco(int Direction,H_RecRPObject* station,PPSBaseData* arm_bas
                     zPoints.push_back(fToFZPosition);
                     xPointsError.push_back(fToFHitSigmaX);
                     yPointsError.push_back(fToFHitSigmaY);
-                    cout<<"Direction "<<Direction<<" added point for ToF      : x = "<< xPoints.back() <<" +o- "<<xPointsError.back()<<" y = "<< yPoints.back() <<" +o- "<<yPointsError.back()<<endl;
+                    if (fVerbose) edm::LogWarning("debug") <<"Direction "<<Direction<<" added point for ToF      : x = "<< xPoints.back() <<" +o- "<<xPointsError.back()<<" y = "<< yPoints.back() <<" +o- "<<yPointsError.back();
                 }
 
                 if(xPoints.size()<2) continue;
@@ -615,14 +615,19 @@ void PPSSim::TrackReco(int Direction,H_RecRPObject* station,PPSBaseData* arm_bas
 
                     if(i<Trk1->NHits) arm->get_Track().set_HitDet1(Trk1->X.at(i),Trk1->Y.at(i));
                     if(j<Trk2->NHits) arm->get_Track().set_HitDet2(Trk2->X.at(j),Trk2->Y.at(j));
-                    if(k<ToF->get_NHits()) arm->get_Track().set_HitToF (ToF->ToF.at(k),ToF->X.at(k),ToF->X.at(k));
+                    if(k<ToF->get_NHits()){
+                        arm->get_Track().set_HitToF (ToF->ToF.at(k),ToF->X.at(k),ToF->X.at(k));
+                        arm->get_Track().set_TimeOfFlight(ToF->ToF.at(k));
+                    }
+                    else{
+                        arm->get_Track().set_TimeOfFlight(-1.);
+                    }
                     arm->get_Track().set_X0(x0);
                     arm->get_Track().set_Y0(y0);
                     arm->get_Track().set_Phi(phi);
                     arm->get_Track().set_ThetaAtIP(thx,thy); // thx is given in CMS coordinates
                     arm->get_Track().set_XTrackChiSquare(xChiSquare);
                     arm->get_Track().set_YTrackChiSquare(yChiSquare);
-                    arm->get_Track().set_TimeOfFlight(ToF->ToF.at(k));
                        
                 }
 
@@ -638,6 +643,7 @@ void PPSSim::TrackReco(int Direction,H_RecRPObject* station,PPSBaseData* arm_bas
 
 void PPSSim::VertexReco()
 {
+    if (fVerbose) edm::LogWarning("debug") <<"Starting Vertex Reco";
     PPSRecoTracks* tracksF=&(fReco->ArmF.Tracks);
     if (tracksF->size()==0) return;
     PPSRecoTracks* tracksB=&(fReco->ArmB.Tracks);
@@ -655,8 +661,10 @@ void PPSSim::VertexReco()
 
     for(int i=0;i<(int)tracksF->size();i++){
         tofF=tracksF->at(i).get_TimeOfFlight();
+        if(tofF==-1.) continue;
         for(int j=0;j<(int)tracksB->size();j++) {
             tofB=tracksB->at(j).get_TimeOfFlight();
+            if(tofB==-1.) continue;
             // if (ToFDet_B->GetADC(cellidB,l)==0) edm::LogWarning("debug") << "WARNING: no ADC found";
             ToFtot = tofF+tofB;
             if (fabs(ToFtot-2*fToFZPosition/c_light_ns)>Nsigma*d_ToFtot) continue;
