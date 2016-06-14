@@ -57,7 +57,7 @@ def customise(process):
                          BeamSize_ArmB_Trk2 = cms.double(0.131), # beam sigma (X) at Arm Backward second tracker station in mm
                          BeamSize_ArmB_ToF  = cms.double(0.107), # beam sigma (X) at Arm Backward timing station in mm
                          ShowBeamLine   = cms.untracked.bool(False),
-                         SimBeamProfile = cms.untracked.bool(True),
+                         SimBeamProfile = cms.untracked.bool(False),
                          CrossAngleCorr = cms.bool(useCR),
                          CrossingAngle  = cms.double(205.0) #in mrad
                          )
