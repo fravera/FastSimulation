@@ -9,7 +9,7 @@
 #include "FastSimulation/PPSFastObjects/interface/PPSVertex.h"
 #include "DataFormats/Common/interface/Wrapper.h"
 
-namespace { struct dictionary {
+namespace { struct dictionaryPPS {
     PPSVertex                    vtx;
     edm::Wrapper<PPSVertex>      vtxs;
     PPSGenVertex                 genvtx;
