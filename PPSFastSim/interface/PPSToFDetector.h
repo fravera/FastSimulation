@@ -8,13 +8,14 @@
 class PPSToFDetector {
       public:
             PPSToFDetector(double detWidth, double detHeight, double detPosition);
-            virtual ~PPSToFDetector() {};
+            ~PPSToFDetector() {};
+            // virtual ~PPSToFDetector() {};
 
             double GetHeight()                       {return DetHeight;};
             double GetWidth()                        {return DetWidth;};
             double GetPosition()                     {return DetPosition;};
             
-            int get_NHits()                          {return NHits;}; // return the total hit multiplicity (full det)
+            unsigned get_NHits()                     {return NHits;}; // return the total hit multiplicity (full det)
            
 
             void AddHit(double x, double y,double tof);

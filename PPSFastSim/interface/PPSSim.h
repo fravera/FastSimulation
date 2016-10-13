@@ -16,9 +16,12 @@
 #include <cmath>
 #include <stdio.h>
 #include <math.h> 
+#include <string.h>
+#include <map>
 // Framework includes
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 #include "FWCore/Framework/interface/Event.h"
+#include "FWCore/Framework/interface/ESHandle.h"
 #include "HepMC/GenEvent.h"
 #include "HepMC/GenVertex.h"
 #include "HepMC/GenParticle.h"
@@ -26,6 +29,8 @@
 #include "CLHEP/Units/SystemOfUnits.h"
 #include "FastSimulation/PPSFastObjects/interface/PPSSpectrometer.h"
 #include "FastSimulation/PPSFastSim/interface/PPSTrkDetector.h"
+#include "FastSimulation/PPSFastSim/interface/PPSStripDetector.h"
+#include "FastSimulation/PPSFastSim/interface/PPSPixelDetector.h"
 #include "FastSimulation/PPSFastSim/interface/PPSToFDetector.h"
 // Hector #includes
 #include "H_BeamLine.h"
@@ -64,31 +69,121 @@ class PPSSim {
         void set_tMin(double t)    {t_min   = t;};
         void set_tMax(double t)    {t_max   = t;};
         void set_CentralMass(double m,double me) {fCentralMass=m;fCentralMassErr=me;};
-        void set_TrackerZPosition(double p)   {fTrackerZPosition=p;};
-        void set_TrackerEdgeOffset(double x1F, double x2F, double x1B, double x2B) {
-            fTrk1XOffsetF=x1F; fTrk2XOffsetF=x2F; fTrk1XOffsetB=x1B; fTrk2XOffsetB=x2B;};
+
+        //Tracker characteristics
+        void set_TrackerZPosition   (double p)  {
+            fTrackerZPosition=p;
+        };
+        void set_TrackerEdgeOffset  (double x1F, double x2F, double x1B, double x2B) {
+            fTrk1XOffsetF=x1F; fTrk2XOffsetF=x2F; fTrk1XOffsetB=x1B; fTrk2XOffsetB=x2B;
+        };
+        void set_TrackerLength      (double p)     {
+            fTrackerLength=p;
+        };
+        void set_TrackerSize        (double w,double h) {
+            fTrackerWidth=w;fTrackerHeight=h;
+        };
+        void set_BeamXSizeTracker(std::map<int,double> beamXRMSArmFTrackerMap,std::map<int,double> beamXRMSArmBTrackerMap) {
+            fBeamXRMSArmFTrackerMap = beamXRMSArmFTrackerMap;
+            fBeamXRMSArmBTrackerMap = beamXRMSArmBTrackerMap;
+        };
+        void set_BeamXCenterTracker(std::map<int,double> beamXCenterArmFTrackerMap,std::map<int,double> beamXCenterArmBTrackerMap) {
+            fBeamXCenterArmFTrackerMap = beamXCenterArmFTrackerMap;
+            fBeamXCenterArmBTrackerMap = beamXCenterArmBTrackerMap;
+        };
+        void set_HitSmearing        (bool f=true)    {
+            fSmearHit = f;
+        };
+        void set_TrackerResolution  (double r) {
+            fHitSigmaX=r;fHitSigmaY=r;
+        };
+        void set_TrackerGeometry    (string trackerGeometry) {
+            fTrackerGeometry = trackerGeometry;
+        };
+        void set_VerticalShift      (double verticalShift) {
+            fVerticalShift = verticalShift;
+        };
+        void set_TrkDetXOffset      (double trkDetXOffset) {
+            fTrkDetXOffset = trkDetXOffset;
+        };
+        void set_NumberOfStrips     (int numberOfStrips) {
+            fNumberOfStrips = numberOfStrips;
+        };
+        void set_StripPitch         (double stripPitch) {
+            fStripPitch = stripPitch;
+        };
+        void set_CutSideLength      (double cutSideLength) {
+            fCutSideLength = cutSideLength;
+        };
+        void set_ClusterSizePlotFile(string clusterSizePlotFile) {
+            fClusterSizePlotFile = clusterSizePlotFile;
+        }
+        void set_ClusterSizePlotName(string clusterSizePlotName) {
+            fClusterSizePlotName = clusterSizePlotName;
+        }
+        void set_NumberOfRows       (int numberOfRows) {
+            fNumberOfRows = numberOfRows;
+        };
+        void set_NumberOfColumns    (int numberOfColumns) {
+            fNumberOfColumns = numberOfColumns;
+        };
+        void set_DoubleSizeColumn   (vector<int> doubleSizeColumn) {
+            fDoubleSizeColumn = doubleSizeColumn;
+        };
+        void set_DoubleSizeRow      (vector<int> doubleSizeRow) {
+            fDoubleSizeRow = doubleSizeRow;
+        };
+        void set_PixelPitchX        (double pixelPitchX) {
+            fPixelPitchX = pixelPitchX;
+        };
+        void set_PixelPitchY        (double pixelPitchY) {
+            fPixelPitchY = pixelPitchY;
+        };
+        void set_TrackingDetectorIDs(vector<int> trackingDetectorIDs)  {
+            fTrackingDetectorIDs = trackingDetectorIDs;
+        };
+        void set_TrackingDetectorNameMap(std::map<int,string> trackingDetectorNameMap)  {
+            fTrackingDetectorNameMap = trackingDetectorNameMap;
+        };
+        void set_TrackingStationZPositionMap(std::map<int,double> trackingStationZPositionMap) {
+            fTrackingStationZPositionMap = trackingStationZPositionMap;
+        };
+        void set_TrackingStationXRotationMap(std::map<int,double> trackingStationXRotationMap) {
+            fTrackingStationXRotationMap = trackingStationXRotationMap;
+        };
+        void set_TrackingStationYRotationMap(std::map<int,double> trackingStationYRotationMap) {
+            fTrackingStationYRotationMap = trackingStationYRotationMap;
+        };
+        void set_TrackingStationZRotationMap(std::map<int,double> trackingStationZRotationMap) {
+            fTrackingStationZRotationMap = trackingStationZRotationMap;
+        };
+        void set_RomanPotGeometry(edm::ESHandle<TotemRPGeometry> rpGeometry) {
+            fRpGeometry = rpGeometry;
+            // if(fRpGeometry==NULL){
+            //     throw cms::Exception("PPSSim.h") << "Very Forward Misaligned Geometry Record not found.";
+            // }
+        };
+       
+        //Time of Flight characteristics
         void set_ToFEdgeOffset(double toFXOffsetF, double toFXOffsetB){
             fToFXOffsetF = toFXOffsetF; fToFXOffsetB = toFXOffsetB;};
-
-        void set_FilterHitMap(bool f)        {fFilterHitMap=f;};
-        void set_ApplyFiducialCuts(bool f)   {fApplyFiducialCuts=f;};
-        void set_UseToFForTracking(bool f)   {fUseToFForTracking=f;};
-        // void set_WindowForTrack(double x, double y,double c)
-        //     {fMaxXfromBeam=x;fMaxYfromBeam=y;fDetectorClosestX=c;};
-        void set_TrackerLength(double p)     {fTrackerLength=p;};
-        void set_TrackerSize(double w,double h) {fTrackerWidth=w;fTrackerHeight=h;};
         void set_ToFSize(double w,double h) {fToFWidth=w;fToFHeight=h;};
         void set_ToFGeometry(std::string tofgeometry)   {fToFGeometry=tofgeometry;};
         void set_ToFZPosition(double p)       {fToFZPosition=p;};
+        void set_ToFResolution(double p, double smearingX, double smearingY)  {fTimeSigma=p; fToFHitSigmaX = smearingX; fToFHitSigmaY = smearingY;};
+
+
+        void set_FilterHitMap(bool f)        {fFilterHitMap=f;};
+        // void set_WindowForTrack(double x, double y,double c)
+        //     {fMaxXfromBeam=x;fMaxYfromBeam=y;fDetectorClosestX=c;};
+        void set_ApplyFiducialCuts(bool f)   {fApplyFiducialCuts=f;};
+        void set_UseToFForTracking(bool f)   {fUseToFForTracking=f;};
         void set_TCLPosition(const string& tcl,double z1,double z2) {
             if (tcl=="TCL4")      {fTCL4Position1=z1;fTCL4Position2=z2;}
             else if (tcl=="TCL5") {fTCL5Position1=z1;fTCL5Position2=z2;}
             else edm::LogWarning("debug")  <<"WARNING: Unknown Collimator " << tcl ;
         }
-        void set_ToFResolution(double p, double smearingX, double smearingY)  {fTimeSigma=p; fToFHitSigmaX = smearingX; fToFHitSigmaY = smearingY;};
         void set_VertexSmearing(bool f=true) {fSmearVertex = f;};
-        void set_HitSmearing(bool f=true)    {fSmearHit = f;};
-        void set_TrackerResolution(double r) {fHitSigmaX=r;fHitSigmaY=r;};
         void set_BeamLineFile(std::string b1, std::string b2) {fBeamLine1File=b1;fBeamLine2File=b2;};
         void set_BeamDirection(int b1dir,int b2dir) {fBeam1Direction=b1dir;fBeam2Direction=b2dir;};
         void set_ShowBeamLine()                     {fShowBeamLine=true;};
@@ -111,13 +206,25 @@ class PPSSim {
         void set_BeamEnergyRMS(double rms)        {fBeamEnergyRMS=rms;};
         void set_BeamAngleSmearing(bool f=false)  {fSmearAngle=f;};
         void set_BeamAngleRMS(double rms)         {fBeamAngleRMS=rms;};
-        void set_BeamXSizes(double bsig_ArmF_det1,double bsig_ArmF_det2,double bsig_ArmF_tof,double bsig_ArmB_det1,double bsig_ArmB_det2,double bsig_ArmB_tof) {
-            fBeamXRMS_ArmB_Trk1=bsig_ArmF_det1;
-            fBeamXRMS_ArmB_Trk2=bsig_ArmF_det2;
-            fBeamXRMS_ArmB_ToF=bsig_ArmF_tof;
-            fBeamXRMS_ArmF_Trk1=bsig_ArmB_det1;
-            fBeamXRMS_ArmF_Trk2=bsig_ArmB_det2;
-            fBeamXRMS_ArmF_ToF=bsig_ArmB_tof;
+        // void set_BeamXSizes(double bsig_ArmF_det1,double bsig_ArmF_det2,double bsig_ArmF_tof,double bsig_ArmB_det1,double bsig_ArmB_det2,double bsig_ArmB_tof) {
+        //     fBeamXRMS_ArmB_Trk1=bsig_ArmF_det1;
+        //     fBeamXRMS_ArmB_Trk2=bsig_ArmF_det2;
+        //     fBeamXRMS_ArmB_ToF=bsig_ArmF_tof;
+        //     fBeamXRMS_ArmF_Trk1=bsig_ArmB_det1;
+        //     fBeamXRMS_ArmF_Trk2=bsig_ArmB_det2;
+        //     fBeamXRMS_ArmF_ToF=bsig_ArmB_tof;
+        // };
+        // void set_BeamXRMSTracker(vector<double> beamXRMS_ArmF_Trk,vector<double> beamXRMS_ArmB_Trk){
+        //     fBeamXRMS_ArmF_Trk = beamXRMS_ArmF_Trk;
+        //     fBeamXRMS_ArmB_Trk = beamXRMS_ArmB_Trk;
+        // };
+        void set_BeamXRMSToF(double beamXRMS_ArmF_ToF,double beamXRMS_ArmB_ToF){
+            fBeamXRMS_ArmF_ToF = beamXRMS_ArmF_ToF;
+            fBeamXRMS_ArmB_ToF = beamXRMS_ArmB_ToF;
+        };
+         void set_BeamXCenterToF(double beamXCenter_ArmF_ToF,double beamXCenter_ArmB_ToF){
+            fBeamXCenter_ArmF_ToF = beamXCenter_ArmF_ToF;
+            fBeamXCenter_ArmB_ToF = beamXCenter_ArmB_ToF;
         };
         void set_TrackerInsertion(double xpos) {fTrackerInsertion=xpos;};
         void set_ToFInsertion(double xpos)     {fToFInsertion=xpos;};
@@ -138,7 +245,7 @@ class PPSSim {
         void TrackReco(int Direction,H_RecRPObject* station,PPSBaseData* arm);
         void VertexReco();
         void Digitization();
-        void TrackerDigi(int Direction, const PPSBaseData*,PPSTrkStation*);
+        void TrackerDigi(const PPSBaseData*, std::map<int,PPSTrkDetector>);
         void ToFDigi(int Direction, const PPSBaseData*,PPSToFDetector*);
         void ReconstructArm(H_RecRPObject* pps_station, double x1,double y1,double x2,double y2, double& tx, double& ty,double& eloss);
         void Get_t_and_xi(const TLorentzVector* p,double& t, double& xi);
@@ -156,7 +263,7 @@ class PPSSim {
         TLorentzVector shoot(const double& t, const double& xi,const double& phi,const int);
         void LoadParameters();
         void PrintParameters();
-        void HitSmearing(double& x, double& y, double& z);
+        // void HitSmearing(double& x, double& y, double& z);
         void ToFSmearing(double& t) {if (fSmearHit) t = gRandom3->Gaus(t,fTimeSigma);};
         void set_XTrackChiSquareCut(double xTrackChiSquareCut) {fXTrackChiSquareCut=xTrackChiSquareCut;};
         void set_YTrackChiSquareCut(double yTrackChiSquareCut) {fYTrackChiSquareCut=yTrackChiSquareCut;};
@@ -191,7 +298,6 @@ class PPSSim {
         H_BeamLine*    beamlineB;
         H_RecRPObject* pps_stationF;
         H_RecRPObject* pps_stationB;
-
         // LHC and det parameters
         std::string         fBeamLine1File;
         std::string         fBeamLine2File;
@@ -202,29 +308,58 @@ class PPSSim {
         float          fBeamLineLength;
         double         fBeamEnergy;
         double         fBeamMomentum;
-        double         fBeamXRMS_ArmF_Trk1; // beam X size at tracker station 1
-        double         fBeamXRMS_ArmF_Trk2; // beam X size at tracker station 2
+        std::map<int,double> fBeamXRMSArmFTrackerMap; // beam X size at tracker stations
         double         fBeamXRMS_ArmF_ToF; // beam X size at tof station
-        double         fBeamXRMS_ArmB_Trk1; // beam X size at tracker station 1
-        double         fBeamXRMS_ArmB_Trk2; // beam X size at tracker station 2
+        std::map<int,double> fBeamXRMSArmBTrackerMap; // beam X size at tracker stations
         double         fBeamXRMS_ArmB_ToF; // beam X size at tof station
-
+        std::map<int,double> fBeamXCenterArmFTrackerMap; // beam X center at tracker stations
+        double         fBeamXCenter_ArmF_ToF; // beam X center at tof station
+        std::map<int,double> fBeamXCenterArmBTrackerMap; // beam X center at tracker stations
+        double         fBeamXCenter_ArmB_ToF; // beam X center at tof station
         double         fCrossingAngle; // in micro radians
         bool           fCrossAngleCorr;
         bool           fKickersOFF;
         double         fDetectorClosestX;
         double         fMaxXfromBeam;
         double         fMaxYfromBeam;
+
+        //Tracker characteristics
+        string         fTrackerGeometry;
         double         fTrackerZPosition;
         double         fTrackerLength;
         double         fTrackerWidth;
         double         fTrackerHeight;
+        double         fTrackerInsertion; // position of tracker during data taking (in number of sigmas)
+        double         fVerticalShift;
+        double         fTrkDetXOffset;
+        int            fNumberOfStrips;
+        double         fStripPitch;
+        double         fCutSideLength;
+        string         fClusterSizePlotFile;
+        string         fClusterSizePlot;
+        int            fNumberOfRows;
+        int            fNumberOfColumns;
+        vector<int>    fDoubleSizeColumn;
+        vector<int>    fDoubleSizeRow;
+        double         fPixelPitchX;
+        double         fPixelPitchY;
+        vector<int>     fTrackingDetectorIDs;
+        std::map<int,string> fTrackingDetectorNameMap;
+        std::map<int,double> fTrackingStationZPositionMap;
+        std::map<int,double> fTrackingStationXRotationMap;
+        std::map<int,double> fTrackingStationYRotationMap;
+        std::map<int,double> fTrackingStationZRotationMap;
+        std::string fClusterSizePlotName;
+        edm::ESHandle<TotemRPGeometry> fRpGeometry;
+
+
+        //Time of Flight characteristics
         double         fToFWidth;
         double         fToFHeight;
-        std::string    fToFGeometry;  
+        string         fToFGeometry;
         double         fToFZPosition;
-        double         fTrackerInsertion; // position of tracker during data taking (in number of sigmas)
         double         fToFInsertion;     // position of tof during data taking (in number of sigmas)
+        
         double         fTCL4Position1;
         double         fTCL4Position2;
         double         fTCL5Position1;
@@ -238,8 +373,11 @@ class PPSSim {
         std::pair<double,double>   fBeam2PosAtTCL5;
         std::pair<double,double>   fBeam2RMSAtTCL5;
 
-        PPSTrkStation* TrkStation_F; // auxiliary object with the tracker geometry
-        PPSTrkStation* TrkStation_B; // auxiliary object with the tracker geometry
+
+        std::map<int,PPSTrkDetector> fTrackingStationForward;
+        std::map<int,PPSTrkDetector> fTrackingStationBackward;
+        // PPSTrkStation* TrkStation_F; // auxiliary object with the tracker geometry
+        // PPSTrkStation* TrkStation_B; // auxiliary object with the tracker geometry
         PPSToFDetector* ToFDet_F;  // idem for the ToF detector
         PPSToFDetector* ToFDet_B;  // idem for the ToF detector
         // Parameters for vertex smearing
@@ -304,9 +442,9 @@ class PPSSim {
         std::vector<double> CheckPoints;
         // Generated proton
         int NVertex;
-        map<int,TVector3> fVertex;
-        map<int,pair<const TLorentzVector*,const TLorentzVector*> > protonsOut;
-        map<int,pair<bool,bool> >                       fHasStopped;
+        std::map<int,TVector3> fVertex;
+        std::map<int,pair<const TLorentzVector*,const TLorentzVector*> > protonsOut;
+        std::map<int,pair<bool,bool> >                       fHasStopped;
         bool fHasStoppedF;
         bool fHasStoppedB;
         const TLorentzVector* protonF;

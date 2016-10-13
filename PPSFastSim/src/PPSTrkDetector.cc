@@ -1,16 +1,19 @@
-#include "FastSimulation/PPSFastSim/interface/PPSTrkDetector.h"
 #include <math.h>
-PPSTrkDetector::PPSTrkDetector(double detw, double deth, double detin):
-                DetectorWidth(detw), DetectorHeight(deth), DetectorPosition(detin) {clear();}
-void PPSTrkDetector::AddHit(double x, double y, double z)
+#include <TRandom3.h>
+#include "FastSimulation/PPSFastSim/interface/PPSTrkDetector.h"
+
+PPSTrkDetector::PPSTrkDetector(TVector3 detectorPosition, TVector3 detectorRotation):
+				fDetectorPosition(detectorPosition),
+				fDetectorRotation(detectorRotation)
 {
-// Detector is in the negative side, but DetectorPosition is a positive number
-     if (x>0) return; // The detector is on the negative side
-     if (fabs(x)>DetectorWidth+DetectorPosition) return; // hit beyond detector area (W)
-     if (fabs(x)<DetectorPosition) return;               // hit falls below detector area
-     if (fabs(y)>DetectorHeight) return;                 // hit falls beyond detector area (H)
-     X.push_back(x);
-     Y.push_back(y);
-     Z.push_back(z);
-     NHits++;
+	// Clear();
+}
+
+
+TVector3 PPSTrkDetector::HitSmearing(TVector3 hitVector3)
+{
+    double x = gRandom->Gaus(hitVector3.X(),fHitSigmaX);
+    double y = gRandom->Gaus(hitVector3.Y(),fHitSigmaY);
+    double z = gRandom->Gaus(hitVector3.Z(),fHitSigmaZ);
+    return TVector3(x,y,z);
 }

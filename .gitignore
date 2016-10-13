@@ -1,11 +1,14 @@
 PPSFastSim/python/__init__.pyc
+PPSFastSim/python/__init__.py
 PPSFastSim/python/customise_FastSimCTPPS_cff.pyc
 PPSValidation/python/CfiFile_cfi.pyc
 PPSValidation/python/ConfFile_cfg.pyc
 PPSValidation/python/ValidationCMSPPS_cfg.pyc
 PPSValidation/python/Validation_CMS_PPS_cfg.pyc
 PPSValidation/python/__init__.pyc
+PPSValidation/python/__init__.py
 PPSFastSim/python/customise_FastSimCTPPS_miniAOD_cff.pyc
 Config/python/__init__.pyc
+Config/python/__init__.py
 Config/python/customise_PPS_VtxMean.pyc
 
