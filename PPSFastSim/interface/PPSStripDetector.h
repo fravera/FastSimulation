@@ -31,7 +31,7 @@ class PPSStripDetector : public PPSTrkDetector{
       	double fCutSideLength;
       	TH1D *fClusterSizePlot;
         TVector3 fRpPosition;
-        std::map<int,PPSStripPlane> fStripPlaneMap;
+        std::map<int,PPSStripPlane*> fStripPlaneMap;
 
 };
 

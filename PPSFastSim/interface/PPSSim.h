@@ -22,6 +22,10 @@
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/ESHandle.h"
+#include "DataFormats/Common/interface/DetSetVector.h"
+#include "DataFormats/CTPPSDetId/interface/TotemRPDetId.h"
+#include "DataFormats/CTPPSDigi/interface/TotemRPDigi.h"
+
 #include "HepMC/GenEvent.h"
 #include "HepMC/GenVertex.h"
 #include "HepMC/GenParticle.h"
@@ -94,8 +98,9 @@ class PPSSim {
         void set_HitSmearing        (bool f=true)    {
             fSmearHit = f;
         };
-        void set_TrackerResolution  (double r) {
-            fHitSigmaX=r;fHitSigmaY=r;
+        void set_TrackerResolution  (double hitSigmaX, double hitSigmaY) {
+            fHitSigmaX=hitSigmaX;
+            fHitSigmaY=hitSigmaY;
         };
         void set_TrackerGeometry    (string trackerGeometry) {
             fTrackerGeometry = trackerGeometry;
@@ -245,7 +250,7 @@ class PPSSim {
         void TrackReco(int Direction,H_RecRPObject* station,PPSBaseData* arm);
         void VertexReco();
         void Digitization();
-        void TrackerDigi(const PPSBaseData*, std::map<int,PPSTrkDetector>);
+        void TrackerDigi();
         void ToFDigi(int Direction, const PPSBaseData*,PPSToFDetector*);
         void ReconstructArm(H_RecRPObject* pps_station, double x1,double y1,double x2,double y2, double& tx, double& ty,double& eloss);
         void Get_t_and_xi(const TLorentzVector* p,double& t, double& xi);
@@ -273,6 +278,8 @@ class PPSSim {
         PPSSpectrometer<Gen> * get_GenDataHolder() {return fGen;};
         PPSSpectrometer<Sim> * get_SimDataHolder() {return fSim;};
         PPSSpectrometer<Reco> * get_RecoDataHolder(){return fReco;};
+        edm::DetSetVector<TotemRPDigi> * get_TotemDigi() {return fTotemDigi;};
+
         double get_BeamMomentum()            {return fBeamMomentum;};
         double get_BeamEnergy()              {return fBeamEnergy;};
         TH2F* get_Beam1Profile()             {return beam1profile;};
@@ -374,8 +381,8 @@ class PPSSim {
         std::pair<double,double>   fBeam2RMSAtTCL5;
 
 
-        std::map<int,PPSTrkDetector> fTrackingStationForward;
-        std::map<int,PPSTrkDetector> fTrackingStationBackward;
+        std::map<int,PPSTrkDetector*> fTrackingStationForward;
+        std::map<int,PPSTrkDetector*> fTrackingStationBackward;
         // PPSTrkStation* TrkStation_F; // auxiliary object with the tracker geometry
         // PPSTrkStation* TrkStation_B; // auxiliary object with the tracker geometry
         PPSToFDetector* ToFDet_F;  // idem for the ToF detector
@@ -454,6 +461,7 @@ class PPSSim {
         TLorentzVector Beam2;
         // Simulated hits
         bool fSimBeam;
+        edm::DetSetVector<TotemRPDigi> * fTotemDigi;
         // private methods
 };
 #endif

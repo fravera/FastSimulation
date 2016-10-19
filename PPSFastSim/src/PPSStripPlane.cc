@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <vector>
 #include <TRandom3.h>
+#include <iostream>
 
 
 PPSStripPlane::PPSStripPlane(TVector3 stripPlanePosition,TVector3 stripPlaneRotation, int numberOfStrips, double pitchStrip, double cutSideLength):
@@ -19,9 +20,8 @@ edm::DetSet<TotemRPDigi> PPSStripPlane::FromHitsToDigi(){
 	std::vector<int> hitStrips;
     edm::DetSet<TotemRPDigi> planeDigi(fPlaneId);
 
-	for(unsigned hIt = 0; hIt<fHits.size(); ++hIt){
-		TVector3 localHit = MoveToPlaneSystem(fHits.at(hIt));
-		if(!IsInPlane(localHit)) continue;
+	for(unsigned hIt = 0; hIt<fLocalHits.size(); ++hIt){
+		TVector3 localHit = fLocalHits.at(hIt);
 		localHit.SetY(localHit.Y()+fCutSideLength/2.); //moves the origin in corrispondence of the sensor corner (strip 0)
 		localHit.RotateZ(-M_PI/4.); //rotate the sensor to have x axis corresponding to strip 0
 		int clusteSize = (int)fClusterSizePlot->GetRandom() + 0.5;
@@ -65,10 +65,15 @@ TVector3 PPSStripPlane::MoveToPlaneSystem(TVector3 globalHit){
 
 	TVector3 localHit = globalHit;
 	localHit.RotateZ(-fPlaneRotation.Z()); //takes into account that station near are rotated by 8 degree
+    // std::cout<<"Rotate Z Local hit x = "<< localHit.X() <<" hit y = "<< localHit.Y() <<" hit z = "<< localHit.Z() << std::endl;
 	localHit.SetY(localHit.Y()-fPlanePosition.Y()); //moves the origin in corrispondence of the sensor center
+    // std::cout<<"Move Y Local hit x = "<< localHit.X() <<" hit y = "<< localHit.Y() <<" hit z = "<< localHit.Z() << std::endl;
 	localHit.RotateX(-fPlaneRotation.X()); //takes into account that v station are back flipped
+    // std::cout<<"Rotate X Local hit x = "<< localHit.X() <<" hit y = "<< localHit.Y() <<" hit z = "<< localHit.Z() << std::endl;
 	localHit.SetX(localHit.X()-fPlanePosition.X()); //moves the origin to the strip sensor edge
+    // std::cout<<"Move X Local hit x = "<< localHit.X() <<" hit y = "<< localHit.Y() <<" hit z = "<< localHit.Z() << std::endl;
 	localHit.RotateY(-fPlaneRotation.Y()); //rotated the plane, not needed for strips but needed for pixel
+    // std::cout<<"Rotate Y Local hit x = "<< localHit.X() <<" hit y = "<< localHit.Y() <<" hit z = "<< localHit.Z() << std::endl;
 
 	return localHit;
 }
@@ -89,6 +94,15 @@ bool PPSStripPlane::IsInPlane(TVector3 localHit){
 bool PPSStripPlane::AddHit(TVector3 hit){
 
 	fHits.push_back(hit);
-	return IsInPlane(hit);
+    // std::cout<<"Adding Plane Global hit x = "<< hit.X() <<" hit y = "<< hit.Y() <<" hit z = "<< hit.Z() << std::endl;
+	TVector3 localHit = MoveToPlaneSystem(hit);
+    // std::cout<<"Adding Plane Local hit x = "<< localHit.X() <<" hit y = "<< localHit.Y() <<" hit z = "<< localHit.Z() << std::endl;
+	if(IsInPlane(localHit)){
+		fLocalHits.push_back(localHit);
+		// std::cout<<"Is in Plane"<<std::endl;
+		return true;
+	}
+	else
+		return false;
 
 }

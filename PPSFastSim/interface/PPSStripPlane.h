@@ -41,6 +41,7 @@ class PPSStripPlane{
       	TVector3 fPlaneRotation;
             // edm::DetSet<TotemRPDigi> fPlaneDigi;
             std::vector<TVector3> fHits;
+            std::vector<TVector3> fLocalHits;
             TH1D *fClusterSizePlot;
 
 };

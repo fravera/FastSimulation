@@ -28,13 +28,13 @@ class PPSTrkDetector {
             int GetNumberOfHits() {return fNumberOfHits;};
             int GetDetectorId()   {return fDetectorId;};
             std::vector<TVector3> GetHits() {return fHits;};
-            std::vector<TVector3> GetSmearedHits() {return fHits;};
+            std::vector<TVector3> GetSmearedHits() {return fSmearedHits;};
 
 
             void SetRpGeometry(edm::ESHandle<TotemRPGeometry> rpGeometry) {fRpGeometry=rpGeometry;};
 
             virtual void Clear() {}; 
-            virtual void AddHit(TVector3 hitVector3) {};
+            virtual void AddHit(TVector3) {};
             TVector3 HitSmearing(TVector3 hitVector3);
 
       protected:

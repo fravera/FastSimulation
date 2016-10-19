@@ -50,6 +50,8 @@ Implementation:
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 #include "Geometry/Records/interface/VeryForwardMisalignedGeometryRecord.h"
 #include "Geometry/Records/interface/VeryForwardRealGeometryRecord.h"
+#include "DataFormats/CTPPSDigi/interface/TotemRPDigi.h"
+
 
 #include <map>
 //
@@ -77,6 +79,7 @@ class PPSProducer : public edm::EDProducer {
         // ----------member data ---------------------------
         bool    fVerbose;
         bool   fUseHepMCProducer;
+        bool fBeginRun;
         PPSSim* pps;
         //Including GetToken 
         edm::InputTag gensrc;
@@ -94,6 +97,8 @@ PPSProducer::PPSProducer(const edm::ParameterSet& iConfig):fVerbose(false)
     produces<PPSSpectrometer<Sim> >("PPSSim");
     produces<PPSSpectrometer<Gen> >("PPSGen");
     produces<PPSSpectrometer<Reco> >("PPSReco");
+    produces<edm::DetSetVector<TotemRPDigi> >("TotemRPDigi");
+    
     //now do what ever other initialization is needed
     pps = NULL;
     edm::FileInPath beam1filename_  = iConfig.getParameter<edm::FileInPath> ("Beam1File");
@@ -122,8 +127,8 @@ PPSProducer::PPSProducer(const edm::ParameterSet& iConfig):fVerbose(false)
     double fTCL4Position       = iConfig.getUntrackedParameter<double>("TCL4Position",0.);
     double fTCL5Position       = iConfig.getUntrackedParameter<double>("TCL5Position",0.);
     bool   fSmearHit           = iConfig.getParameter<bool>("SmearHit");
-    // double fHitSigmaX          = iConfig.getParameter<double>("HitSigmaX");
-    // double fHitSigmaY          = iConfig.getParameter<double>("HitSigmaY");
+    double fHitSigmaX          = iConfig.getParameter<double>("HitSigmaX");
+    double fHitSigmaY          = iConfig.getParameter<double>("HitSigmaY");
     double fTimeSigma          = iConfig.getParameter<double>("TimeSigma");
     double fToFHitSigmaX       = iConfig.getParameter<double>("ToFHitSigmaX");
     double fToFHitSigmaY       = iConfig.getParameter<double>("ToFHitSigmaY");
@@ -325,7 +330,7 @@ PPSProducer::PPSProducer(const edm::ParameterSet& iConfig):fVerbose(false)
     pps->set_momentumMin(fMomentumMin);
     pps->set_CentralMass(fCentralMass,fCentralMassErr);
     // pps->set_HitSmearing(fSmearHit);
-    // pps->set_TrackerResolution((fHitSigmaX+fHitSigmaY)/2.*um_to_mm);
+    pps->set_TrackerResolution(fHitSigmaX,fHitSigmaY);
     pps->set_Verbose(fVerbose);
     pps->set_CrossingAngleCorrection(fCrossAngleCorr);
     pps->set_CrossingAngle(fCrossingAngle);
@@ -359,17 +364,18 @@ void PPSProducer::produce(edm::Event& iEvent, const edm::EventSetup& eventSetup)
     using namespace HepMC;
     using namespace CLHEP;
 
+    if (pps && fBeginRun){
     edm::ESHandle<TotemRPGeometry> rpGeometry;
     eventSetup.get<VeryForwardMisalignedGeometryRecord>().get(rpGeometry);
     //std::cout<<5.1<<std::endl;
     //rpGeometry->GetDetector(1020);
-    std::cout<<"Reading RP Geometry"<<std::endl;
-    pps->set_RomanPotGeometry(rpGeometry);
+    // std::cout<<"Reading RP Geometry"<<std::endl;
+        pps->set_RomanPotGeometry(rpGeometry);
 
-    if (pps){
         pps->PrintParameters();
         pps->BeginRun();
         pps->PrintParameters();
+        // fBeginRun = false;
     }
    
     pps->BeginEvent();
@@ -401,12 +407,14 @@ void PPSProducer::produce(edm::Event& iEvent, const edm::EventSetup& eventSetup)
     std::unique_ptr<PPSSpectrometer<Gen> > fGen(new PPSSpectrometer<Gen>(*(pps->get_GenDataHolder())));
     std::unique_ptr<PPSSpectrometer<Sim> > fSim(new PPSSpectrometer<Sim>(*(pps->get_SimDataHolder())));
     std::unique_ptr<PPSSpectrometer<Reco> > fReco(new PPSSpectrometer<Reco>(*(pps->get_RecoDataHolder())));
+    std::unique_ptr<edm::DetSetVector<TotemRPDigi> > fTotemDigi(new edm::DetSetVector<TotemRPDigi>(*(pps->get_TotemDigi())));
     // iEvent.put(fGen);
     // iEvent.put(fSim);
     // iEvent.put(fReco);
     iEvent.put(std::move(fGen),"PPSGen");
     iEvent.put(std::move(fSim),"PPSSim");
     iEvent.put(std::move(fReco),"PPSReco");
+    iEvent.put(std::move(fTotemDigi),"TotemRPDigi");
 }
 
 //--------------------------------------------------------------------------------------------------------------//
@@ -426,6 +434,7 @@ void PPSProducer::beginJob()
 // void PPSProducer::beginJob(edm::EventSetup const& eventSetup)
 {
     std::cout<<"!!!----- PPSProducer::beginJob -----!!!"<<std::endl;
+    fBeginRun = true;
     // edm::ESHandle<TotemRPGeometry> rpGeometry;
     // eventSetup.get<VeryForwardMisalignedGeometryRecord>().get(rpGeometry);
     // //std::cout<<5.1<<std::endl;

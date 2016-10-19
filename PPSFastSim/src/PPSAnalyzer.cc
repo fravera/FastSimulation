@@ -119,8 +119,8 @@ PPSAnalyzer::PPSAnalyzer(const edm::ParameterSet& iConfig)
    double fTCL4Position       = iConfig.getUntrackedParameter<double>("TCL4Position",0.);
    double fTCL5Position       = iConfig.getUntrackedParameter<double>("TCL5Position",0.);
    bool   fSmearHit           = iConfig.getParameter<bool>("SmearHit");
-   double fHitSigmaX          = iConfig.getParameter<double>("HitSigmaX");
-   double fHitSigmaY          = iConfig.getParameter<double>("HitSigmaY");
+   // double fHitSigmaX          = iConfig.getParameter<double>("HitSigmaX");
+   // double fHitSigmaY          = iConfig.getParameter<double>("HitSigmaY");
    //double fHitSigmaZ          = iConfig.getParameter<double>("HitSigmaZ");
    double fTimeSigma          = iConfig.getParameter<double>("TimeSigma");
    bool   fSmearAngle         = iConfig.getParameter<bool>("SmearAngle");
@@ -195,7 +195,7 @@ PPSAnalyzer::PPSAnalyzer(const edm::ParameterSet& iConfig)
    pps->set_momentumMin(fMomentumMin);
    pps->set_CentralMass(fCentralMass,fCentralMassErr);
    pps->set_HitSmearing(fSmearHit);
-   pps->set_TrackerResolution((fHitSigmaX+fHitSigmaY)/2.*um_to_mm);
+   // pps->set_TrackerResolution((fHitSigmaX+fHitSigmaY)/2.*um_to_mm);
    pps->set_Verbose(verbosity);
    pps->set_CrossingAngleCorrection(fCrossAngleCorr);
    pps->set_CrossingAngle(fCrossingAngle);

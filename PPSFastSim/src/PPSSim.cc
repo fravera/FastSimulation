@@ -136,13 +136,16 @@ void PPSSim::BeginRun()
         }
 
         beamProfilesFile.Close();
-
+        fSimBeam = false;
     }
     // 
     fGen = new PPSSpectrometer<Gen>();
     fSim = new PPSSpectrometer<Sim>();
     fReco= new PPSSpectrometer<Reco>();
     //
+
+    fTrackerZPosition = fTrackingStationZPositionMap[fTrackingDetectorIDs.at(0)];
+    fTrackerLength = fTrackingStationZPositionMap[fTrackingDetectorIDs.at(1)]-fTrackingStationZPositionMap[fTrackingDetectorIDs.at(0)];
 
     for(unsigned i=0; i< fTrackingDetectorIDs.size(); ++i){
         int detectorId = fTrackingDetectorIDs.at(i);
@@ -162,95 +165,102 @@ void PPSSim::BeginRun()
                 edm::LogError("debug") << "Histogram for strip cluster with name " << fClusterSizePlotName << " not found in file " << fClusterSizePlotFile;
                 exit(1);
             }
-            std::cout<<1<<std::endl;
+            // std::cout<<1<<std::endl;
             clusterSizePlot->SetDirectory(0);
-            std::cout<<2<<std::endl;
+            // std::cout<<2<<std::endl;
 
             PPSStripDetector *stripDetector_ArmForward = new PPSStripDetector();
-            std::cout<<3<<std::endl;
-            stripDetector_ArmForward->SetDetectorId(1000+detectorId);
-            std::cout<<4<<std::endl;
-            stripDetector_ArmForward->SetDetectorName("rp_56"+detectorName);
-            std::cout<<5<<std::endl;
-            std::cout<<1000+detectorId<<" -> "<<TotemRPDetId::decToRawId(1000+detectorId)<<std::endl;
+            // std::cout<<3<<std::endl;
+            stripDetector_ArmForward->SetDetectorId(0+detectorId);
+            // std::cout<<4<<std::endl;
+            stripDetector_ArmForward->SetDetectorName("rp_45"+detectorName);
+            // std::cout<<5<<std::endl;
             // unsigned int rawId = TotemRPDetId::decToRawId(1000+detectorId);
             // std::cout<<5.1<<std::endl;
             // fRpGeometry->GetDetector(rawId);
             // if(fRpGeometry==NULL){
             //     throw cms::Exception("PPSSim.h") << "Very Forward Misaligned Geometry Record not found.";
             // }
-            std::cout<<5.2<<std::endl;
-            DetGeomDesc *stripPlaneDescription_ArmForward = fRpGeometry->GetDetector(TotemRPDetId::decToRawId(1000+detectorId));
-            std::cout<<6<<std::endl;
-            if(stripPlaneDescription_ArmForward == NULL){
-                edm::LogError("debug") << "Strip detector with ID " << 1000+detectorId << " not found in file ";
-                exit(1);
-            }
-            std::cout<<7<<std::endl;
+            // std::cout<<5.2<<std::endl;
+            // DetGeomDesc *stripPlaneDescription_ArmForward = fRpGeometry->GetDetector(TotemRPDetId::decToRawId(0+detectorId));
+            // // std::cout<<6<<std::endl;
+            // if(stripPlaneDescription_ArmForward == NULL){
+            //     edm::LogError("debug") << "Strip detector with ID " << 0+detectorId << " not found in file ";
+            //     exit(1);
+            // }
+            // std::cout<<7<<std::endl;
             TVector3 rpPosition_ArmForward(
-                stripPlaneDescription_ArmForward->translation().x()-fTrkDetXOffset+fBeamXCenterArmFTrackerMap[detectorId]-fBeamXRMSArmFTrackerMap[detectorId]*fTrackerInsertion,
-                stripPlaneDescription_ArmForward->translation().y()+fVerticalShift,
-                stripPlaneDescription_ArmForward->translation().z());
-            std::cout<<8<<std::endl;
+                -fTrkDetXOffset+fBeamXCenterArmFTrackerMap[detectorId]-fBeamXRMSArmFTrackerMap[detectorId]*fTrackerInsertion,
+                +fVerticalShift,
+                -fTrackingStationZPositionMap[detectorId]*m_to_mm);
+            // std::cout<<"Forward Pot Position: x = "<<rpPosition_ArmForward.X()<<" y = "<<rpPosition_ArmForward.Y()<<" z = "<<rpPosition_ArmForward.Z()<<std::endl;
+            // std::cout<<8<<std::endl;
             stripDetector_ArmForward->SetRpPosition(rpPosition_ArmForward);
-            std::cout<<9<<std::endl;
+            // std::cout<<9<<std::endl;
             stripDetector_ArmForward->SetDetectorResolution(fHitSigmaX, fHitSigmaY, fHitSigmaZ);
-            std::cout<<10<<std::endl;
+            // std::cout<<10<<std::endl;
             stripDetector_ArmForward->SetNumberOfStrips(fNumberOfStrips);
-            std::cout<<11<<std::endl;
+            // std::cout<<11<<std::endl;
             stripDetector_ArmForward->SetStripPitch(fStripPitch);
-            std::cout<<12<<std::endl;
+            // std::cout<<12<<std::endl;
             stripDetector_ArmForward->SetCutSideLength(fCutSideLength);
-            std::cout<<13<<std::endl;
+            // std::cout<<13<<std::endl;
             stripDetector_ArmForward->SetClusterSizePlot(clusterSizePlot);
-            std::cout<<13.1<<std::endl;
+            // std::cout<<13.1<<std::endl;
             stripDetector_ArmForward->SetRpGeometry(fRpGeometry);
-            std::cout<<13.2<<std::endl;
+            // std::cout<<13.2<<std::endl;
             stripDetector_ArmForward->BuildDetectorPlanes();
-            std::cout<<14<<std::endl;
+            // std::cout<<14<<std::endl;
+            // std::cout<<15<<std::endl;
+            // stripDetector_ArmForward->AddHit(TVector3(0.,0.,0.));
+            // std::cout<<16<<std::endl;
             trackingDetector_ArmForward = stripDetector_ArmForward;
+            // std::cout<<17<<std::endl;
+            // trackingDetector_ArmForward->AddHit(TVector3(0.,0.,0.));
+            // std::cout<<18<<std::endl;
 
             PPSStripDetector *stripDetector_ArmBackward = new PPSStripDetector();
-            std::cout<<15<<std::endl;
-            stripDetector_ArmBackward->SetDetectorId(0+detectorId);
-            std::cout<<16<<std::endl;
-            stripDetector_ArmBackward->SetDetectorName("rp_45"+detectorName);
-            std::cout<<17<<std::endl;
-            DetGeomDesc *stripPlaneDescription_ArmBackward = fRpGeometry->GetDetector(TotemRPDetId::decToRawId(0+detectorId));
-            std::cout<<18<<std::endl;
-            if(stripPlaneDescription_ArmBackward == NULL){
-                edm::LogError("debug") << "Strip detector with ID " << 0+detectorId << " not found in file ";
-                exit(1);
-            }
-            std::cout<<19<<std::endl;
+            // std::cout<<15<<std::endl;
+            stripDetector_ArmBackward->SetDetectorId(1000+detectorId);
+            // std::cout<<16<<std::endl;
+            stripDetector_ArmBackward->SetDetectorName("rp_56"+detectorName);
+            // std::cout<<17<<std::endl;
+            // DetGeomDesc *stripPlaneDescription_ArmBackward = fRpGeometry->GetDetector(TotemRPDetId::decToRawId(1000+detectorId));
+            // // std::cout<<18<<std::endl;
+            // if(stripPlaneDescription_ArmBackward == NULL){
+            //     edm::LogError("debug") << "Strip detector with ID " << 0+detectorId << " not found in file ";
+            //     exit(1);
+            // }
+            // std::cout<<19<<std::endl;
             TVector3 rpPosition_ArmBackward(
-                stripPlaneDescription_ArmBackward->translation().x()-fTrkDetXOffset+fBeamXCenterArmBTrackerMap[detectorId]-fBeamXRMSArmBTrackerMap[detectorId]*fTrackerInsertion,
-                stripPlaneDescription_ArmBackward->translation().y()+fVerticalShift,
-                stripPlaneDescription_ArmBackward->translation().z());
-            std::cout<<20<<std::endl;
-            stripDetector_ArmForward->SetRpPosition(rpPosition_ArmBackward);
-            std::cout<<21<<std::endl;
+                -fTrkDetXOffset+fBeamXCenterArmBTrackerMap[detectorId]-fBeamXRMSArmBTrackerMap[detectorId]*fTrackerInsertion,
+                fVerticalShift,
+                fTrackingStationZPositionMap[detectorId]*m_to_mm);
+            // std::cout<<"Backward Pot Position: x = "<<rpPosition_ArmBackward.X()<<" y = "<<rpPosition_ArmBackward.Y()<<" z = "<<rpPosition_ArmBackward.Z()<<std::endl;
+            // std::cout<<20<<std::endl;
+            stripDetector_ArmBackward->SetRpPosition(rpPosition_ArmBackward);
+            // std::cout<<21<<std::endl;
             stripDetector_ArmBackward->SetDetectorResolution(fHitSigmaX, fHitSigmaY, fHitSigmaZ);
-            std::cout<<22<<std::endl;
+            // std::cout<<22<<std::endl;
             stripDetector_ArmBackward->SetNumberOfStrips(fNumberOfStrips);
-            std::cout<<23<<std::endl;
+            // std::cout<<23<<std::endl;
             stripDetector_ArmBackward->SetStripPitch(fStripPitch);
-            std::cout<<24<<std::endl;
+            // std::cout<<24<<std::endl;
             stripDetector_ArmBackward->SetCutSideLength(fCutSideLength);
-            std::cout<<25<<std::endl;
+            // std::cout<<25<<std::endl;
             stripDetector_ArmBackward->SetClusterSizePlot(clusterSizePlot);
-            std::cout<<25.1<<std::endl;
+            // std::cout<<25.1<<std::endl;
             stripDetector_ArmBackward->SetRpGeometry(fRpGeometry);
-            std::cout<<25.2<<std::endl;
+            // std::cout<<25.2<<std::endl;
             stripDetector_ArmBackward->BuildDetectorPlanes();
-            std::cout<<26<<std::endl;
+            // std::cout<<26<<std::endl;
             trackingDetector_ArmBackward = stripDetector_ArmBackward;
-            std::cout<<27<<std::endl;
+            // std::cout<<27<<std::endl;
 
             clusterSizePlotFile->Close();
-            std::cout<<28<<std::endl;
+            // std::cout<<28<<std::endl;
             delete clusterSizePlotFile;
-            std::cout<<29<<std::endl;
+            // std::cout<<29<<std::endl;
         }
 
         if(fTrackerGeometry=="Pixel"){
@@ -265,8 +275,15 @@ void PPSSim::BeginRun()
             trackingDetector_ArmBackward = pixelDetector_ArmBackward;
         }
 
-        fTrackingStationForward[detectorId]=*trackingDetector_ArmForward;
-        fTrackingStationBackward[detectorId]=*trackingDetector_ArmBackward;
+        fTrackingStationForward[detectorId]=trackingDetector_ArmForward;
+        fTrackingStationBackward[detectorId]=trackingDetector_ArmBackward;
+        // PPSStripDetector *stripDetectorF = (stripDetectorF*)fTrackingStationForward[detectorId];
+        // std::cout<<"Direction = F hit x = "<<0.<<" hit y = "<<0.<<" hit z = "<<0.<<std::endl;
+        // // stripDetectorF->AddHit(TVector3(0.,0.,0.));
+        // fTrackingStationForward[detectorId]->AddHit(TVector3(0.,0.,0.));
+        // PPSStripDetector *stripDetectorB = (PPSStripDetector*)&fTrackingStationBackward[detectorId];
+        // std::cout<<"Direction = B hit x = "<<0.<<" hit y = "<<0.<<" hit z = "<<0.<<std::endl;
+        // stripDetectorB->AddHit(TVector3(0.,0.,0.));
         
     }
 
@@ -294,6 +311,7 @@ void PPSSim::EndRun()
 
 void PPSSim::BeginEvent()
 {
+    std::cout<< " !!! ------ PPSSim::BeginEvent ------ !!!\n";
     fGen->clear();
     fSim->clear();
     fReco->clear();
@@ -308,7 +326,7 @@ void PPSSim::BeginEvent()
 
     for(unsigned i=0; i< fTrackingDetectorIDs.size(); ++i){
         int detectorId = fTrackingDetectorIDs.at(i);
-        fTrackingStationForward[detectorId].Clear();
+        fTrackingStationForward[detectorId]->Clear();
 
     }
     
@@ -321,6 +339,8 @@ void PPSSim::BeginEvent()
 
 void PPSSim::EndEvent()
 {
+    std::cout<< " !!! ------ PPSSim::EndEvent ------ !!!\n";
+
     for(int i=0;i<NVertex;i++) {
         protonF = (protonsOut[i].first); protonB = (protonsOut[i].second);
         if (protonF) delete protonF;
@@ -335,6 +355,8 @@ void PPSSim::EndEvent()
 
 void PPSSim::Run() 
 {
+    std::cout<< " !!! ------ PPSSim::Run ------ !!!\n";
+
     if (!fExternalGenerator) Generation();
     if (fVerbose) edm::LogWarning("debug") << "PPSSim: Starting Simulation step."; 
     Simulation();
@@ -605,6 +627,7 @@ void PPSSim::Reconstruction()
 
 bool PPSSim::SearchTrack( TGraphErrors *xLineProjection, TGraphErrors *yLineProjection ,int Direction,double& xi,double& t,double& partP,double& pt,double& thx,double& thy,double& x0, double& y0, double &xChiSquare, double &yChiSquare)
 {
+    std::cout<< " !!! ------ PPSSim::SearchTrack ------ !!!\n";
     double theta=0.;
     xi = 0; t=0; partP=0; pt=0; x0=0.;y0=0.;
     H_RecRPObject*  station = NULL;
@@ -673,10 +696,11 @@ bool PPSSim::SearchTrack( TGraphErrors *xLineProjection, TGraphErrors *yLineProj
 
 void PPSSim::TrackReco(int Direction,H_RecRPObject* station,PPSBaseData* arm_base)
 {
+    std::cout<< " !!! ------ PPSSim::TrackReco ------ !!!\n";
     //
     PPSRecoData* arm = dynamic_cast<PPSRecoData*>(arm_base);
     double xi,t,partP,pt,phi,theta,x0,y0,thx,thy,xChiSquare, yChiSquare;
-    std::map<int,PPSTrkDetector> trakingDetectorMap;
+    std::map<int,PPSTrkDetector*> trakingDetectorMap;
     PPSToFDetector* ToF  = NULL;
     if (Direction>0) {
         trakingDetectorMap = fTrackingStationForward;
@@ -686,12 +710,17 @@ void PPSSim::TrackReco(int Direction,H_RecRPObject* station,PPSBaseData* arm_bas
         ToF=ToFDet_B;
     }
 
-    std::vector<TVector3> hitTracker1 = trakingDetectorMap[fTrackingDetectorIDs.at(0)].GetSmearedHits(); 
-    std::vector<TVector3> hitTracker2 = trakingDetectorMap[fTrackingDetectorIDs.at(1)].GetSmearedHits(); 
+    std::vector<TVector3> hitTracker1 = trakingDetectorMap[fTrackingDetectorIDs.at(0)]->GetSmearedHits(); 
+    std::vector<TVector3> hitTracker2 = trakingDetectorMap[fTrackingDetectorIDs.at(1)]->GetSmearedHits(); 
     
-    for(unsigned i=0;i<hitTracker1.size();i++) arm->AddHitTrk1(hitTracker1.at(i).X(),hitTracker1.at(i).Y());
-    for(unsigned i=0;i<hitTracker2.size();i++) arm->AddHitTrk1(hitTracker2.at(i).X(),hitTracker2.at(i).Y());
-    
+    for(unsigned i=0;i<hitTracker1.size();i++){
+        arm->AddHitTrk1(hitTracker1.at(i).X(),hitTracker1.at(i).Y());
+        // std::cout<<"Direction = "<<Direction<<" Recorded hit x = "<<hitTracker1.at(i).X()<<" hit y = "<<hitTracker1.at(i).Y()<<" hit z = "<<hitTracker1.at(i).Z()<<std::endl;
+    }
+    for(unsigned i=0;i<hitTracker2.size();i++){
+        arm->AddHitTrk2(hitTracker2.at(i).X(),hitTracker2.at(i).Y());
+        // std::cout<<"Direction = "<<Direction<<" Recorded hit x = "<<hitTracker2.at(i).X()<<" hit y = "<<hitTracker2.at(i).Y()<<" hit z = "<<hitTracker2.at(i).Z()<<std::endl;
+    }  
     unsigned numberOfTrk1Points = (hitTracker1.size()==0) ? 1 : hitTracker1.size();
     unsigned numberOfTrk2Points = (hitTracker2.size()==0) ? 1 : hitTracker2.size();
     unsigned numberOfToFPoints = (ToF->get_NHits()==0 || !fUseToFForTracking) ? 1 : ToF->get_NHits();
@@ -721,15 +750,22 @@ void PPSSim::TrackReco(int Direction,H_RecRPObject* station,PPSBaseData* arm_bas
                     if (fVerbose) edm::LogWarning("debug") <<"Direction "<<Direction<<" added point for Tracker 2: x = "<< xPoints.back() <<" +o- "<<xPointsError.back()<<" y = "<< yPoints.back() <<" +o- "<<yPointsError.back();
                 }
                 if(k<ToF->get_NHits() && fUseToFForTracking){
+                    // std::cout<<1<<std::endl;
                     xPoints.push_back(ToF->X.at(k));
+                    // std::cout<<2<<std::endl;
                     yPoints.push_back(ToF->Y.at(k));
+                    // std::cout<<3<<std::endl;
                     zPoints.push_back(fToFZPosition);
+                    // std::cout<<4<<std::endl;
                     xPointsError.push_back(fToFHitSigmaX);
+                    // std::cout<<5<<std::endl;
                     yPointsError.push_back(fToFHitSigmaY);
+                    // std::cout<<6<<std::endl;
                     if (fVerbose) edm::LogWarning("debug") <<"Direction "<<Direction<<" added point for ToF      : x = "<< xPoints.back() <<" +o- "<<xPointsError.back()<<" y = "<< yPoints.back() <<" +o- "<<yPointsError.back();
                 }
 
                 if(xPoints.size()<2) continue;
+                // std::cout<<xPoints.size()<<std::endl;
 
                 TGraphErrors *xLineProjection = new TGraphErrors(xPoints.size(), &(zPoints[0]), &(xPoints[0]), 0, &(xPointsError[0]));
                 TGraphErrors *yLineProjection = new TGraphErrors(xPoints.size(), &(zPoints[0]), &(yPoints[0]), 0, &(yPointsError[0]));
@@ -845,47 +881,43 @@ void PPSSim::Digitization()
     //    Fake method to mimic a digitization procedure
     //    Just copy the information from the fSim branch and smear the hit according to a given
     //    detector resolution;
-    int Direction;
-    Direction=1;
-    TrackerDigi(&(fSim->ArmF),fTrackingStationForward);
-    ToFDigi(Direction,&(fSim->ArmF),ToFDet_F);
+    TrackerDigi();
 
+    int Direction=1;
+    ToFDigi(Direction,&(fSim->ArmF),ToFDet_F);
     Direction=-1;
-    TrackerDigi(&(fSim->ArmB),fTrackingStationBackward);
     ToFDigi(Direction,&(fSim->ArmB),ToFDet_B);
+
 }
 
 //--------------------------------------------------------------------------------------------------------------//
 
-void PPSSim::TrackerDigi(const PPSBaseData* arm_sim, std::map<int,PPSTrkDetector> trackingStation)
+void PPSSim::TrackerDigi()
 {
 
-    // double trk1Offset=0.;
-    // double trk2Offset=0.;
-    // double beamXRMS_Trk1=0.;
-    // double beamXRMS_Trk2=0.;
-    // if (Direction>0) {
-    //     trk1Offset = fTrk1XOffsetF;
-    //     trk2Offset = fTrk2XOffsetF;
-    //     beamXRMS_Trk1 = fBeamXRMS_ArmF_Trk1;
-    //     beamXRMS_Trk2 = fBeamXRMS_ArmF_Trk2;
-    // } else {
-    //     trk1Offset = fTrk1XOffsetB;
-    //     trk2Offset = fTrk2XOffsetB;
-    //     beamXRMS_Trk1 = fBeamXRMS_ArmB_Trk1;
-    //     beamXRMS_Trk2 = fBeamXRMS_ArmB_Trk2;
-    // }
+    std::vector<edm::DetSet<TotemRPDigi> > rpStripClusters;
 
-    if(!arm_sim) return;
-    //
-    // PPSTrkDetector* det1 = &(TrkDet->first);
-    // PPSTrkDetector* det2 = &(TrkDet->second);
-    // det1->clear();
-    // det2->clear();
-    // for(vector<int>::iterator dIt=fTrackingDetectorIDs.begin(); dIt!=fTrackingDetectorIDs.end(); ++dIt){
-    //     PPSTrkDetector trkDetector = fTrackingStationForward[*dIt];
-    //     // sum clusters
-    // }
+    for(map<int,PPSTrkDetector*>::iterator dIt=fTrackingStationForward.begin(); dIt!=fTrackingStationForward.end(); ++dIt){
+        if(fTrackerGeometry == "TOTEMStrip"){
+            PPSStripDetector *trackingStation = (PPSStripDetector*)dIt->second;
+            std::vector<edm::DetSet<TotemRPDigi> > stationDigi = trackingStation->GetClusters();
+            rpStripClusters.insert(rpStripClusters.end(), stationDigi.begin(), stationDigi.end());
+        }
+        // sum clusters
+    }
+
+    for(map<int,PPSTrkDetector*>::iterator dIt=fTrackingStationBackward.begin(); dIt!=fTrackingStationBackward.end(); ++dIt){
+        if(fTrackerGeometry == "TOTEMStrip"){
+            PPSStripDetector *trackingStation = (PPSStripDetector*)dIt->second;
+            std::vector<edm::DetSet<TotemRPDigi> > stationDigi = trackingStation->GetClusters();
+            rpStripClusters.insert(rpStripClusters.end(), stationDigi.begin(), stationDigi.end());
+        }
+        // sum clusters
+    }
+
+    // std::cout<<"Number of hit strips = "<<rpStripClusters.size()<<std::endl;
+    fTotemDigi = new edm::DetSetVector<TotemRPDigi>(rpStripClusters);
+
 }
 
 //--------------------------------------------------------------------------------------------------------------//
@@ -1104,7 +1136,7 @@ void PPSSim::Propagate(H_BeamParticle* pbeam,int Direction) {
     double tcl4pos = 0;
     double tcl5pos = 0;
 
-    std::map<int,PPSTrkDetector> trakingDetectorMap;
+    std::map<int,PPSTrkDetector*> trakingDetectorMap;
 
     if (Direction>0) {
         arm = &(fSim->ArmF);
@@ -1134,30 +1166,36 @@ void PPSSim::Propagate(H_BeamParticle* pbeam,int Direction) {
         pbeam->propagate(tcl5pos);double xpos=-pbeam->getX()*um_to_mm;
         arm->get_Track().set_XatTCL5(fabs(xpos-beampos)/beamrms);
     }
-    //
 
     for(vector<int>::iterator dIt=fTrackingDetectorIDs.begin(); dIt!=fTrackingDetectorIDs.end(); ++dIt){
         double hitZ = fTrackingStationZPositionMap[*dIt];
-        pbeam->propagate(hitZ);
+        pbeam->propagate(abs(hitZ));
 
-        int stopped = (pbeam->stopped(beamline) && pbeam->getStoppingElement()->getS()<hitZ)?1:0;
+        int stopped = (pbeam->stopped(beamline) && pbeam->getStoppingElement()->getS()<abs(hitZ))?1:0;
         if (stopped) continue;
         // uses mm for X,Y and m for Z in the PPS station
         double hitX = -pbeam->getX()*um_to_mm;
         double hitY = pbeam->getY()*um_to_mm;
         //
-        trakingDetectorMap[*dIt].AddHit(TVector3(hitX,hitY,hitZ));
+        // PPSStripDetector *stripDetector = (PPSStripDetector*)&trakingDetectorMap[*dIt];
+        // if(stripDetector==NULL) std::cout<<"NULL\n";
+        // std::cout<<"Direction = "<<Direction<<" hit x = "<<hitX<<" hit y = "<<hitY<<" hit z = "<<hitZ<<std::endl;
+        trakingDetectorMap[*dIt]->AddHit(TVector3(hitX,hitY,hitZ*m_to_mm));
+        // stripDetector->AddHit(TVector3(hitX,hitY,hitZ));
+        // ((PPSStripDetector)trakingDetectorMap[*dIt]).AddHit(TVector3(hitX,hitY,hitZ));
     }
 
     pbeam->propagate(fTrackerZPosition);
+    // std::cout<<"fTrackerZPosition "<<fTrackerZPosition<<std::endl;
 
     int stopped = (pbeam->stopped(beamline) && pbeam->getStoppingElement()->getS()<fTrackerZPosition)?1:0;
-    if (stopped){
+    if (!stopped){
 
         // uses mm for X,Y and m for Z in the PPS station
         double x1 = -pbeam->getX()*um_to_mm;
         double y1 = pbeam->getY()*um_to_mm;
         //
+        // std::cout<<"Old Direction = "<<Direction<<" hit x = "<<x1<<" hit y = "<<y1<<" hit z = "<<fTrackerZPosition<<std::endl;
         arm->get_Track().set_HitDet1(x1,y1);
         arm->AddHitTrk1(x1,y1);
     }
@@ -1165,9 +1203,11 @@ void PPSSim::Propagate(H_BeamParticle* pbeam,int Direction) {
     pbeam->propagate(fTrackerZPosition+fTrackerLength);
 
     stopped=(pbeam->stopped(beamline) && pbeam->getStoppingElement()->getS()<fTrackerZPosition+fTrackerLength)?1:0;
-    if (stopped){
+    if (!stopped){
         double x2 = -pbeam->getX()*um_to_mm;
         double y2 = pbeam->getY()*um_to_mm;
+        
+        // std::cout<<"Old Direction = "<<Direction<<" hit x = "<<x2<<" hit y = "<<y2<<" hit z = "<<fTrackerZPosition+fTrackerLength<<std::endl;
         arm->get_Track().set_HitDet2(x2,y2);
         arm->AddHitTrk2(x2,y2);
     }
@@ -1178,7 +1218,7 @@ void PPSSim::Propagate(H_BeamParticle* pbeam,int Direction) {
     double xt = -pbeam->getX()*um_to_mm;
     double yt = pbeam->getY()*um_to_mm;
     stopped=(pbeam->stopped(beamline) && pbeam->getStoppingElement()->getS()<fToFZPosition)?1:0;
-    if (stopped){
+    if (!stopped){
         //
         double tof = (fToFZPosition-Direction*startZ)/c_light_ns;
         arm->get_Track().set_HitToF(tof,xt,yt);

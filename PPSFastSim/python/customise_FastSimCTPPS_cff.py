@@ -19,7 +19,7 @@ tofxoffset  = 0.6  + 0. #distance from sensitive edge + RP security margin
 phi_min = -math.pi
 phi_max =  math.pi
 
-def customise(process):
+def customise_ctpps(process):
 ######## CTPPS
     process.load('PhysicsTools.HepMCCandAlgos.genParticles_cfi')
     process.load("FWCore.MessageLogger.MessageLogger_cfi")
@@ -39,6 +39,7 @@ def customise(process):
         VertexY = process.VtxSmeared.MeanY
         VertexZ = process.VtxSmeared.MeanZ
     
+
     print 'Setting CT-PPS FastSim'
     ppssim_beam_options = cms.PSet(
                         Verbosity = cms.untracked.int32(0),
@@ -51,10 +52,10 @@ def customise(process):
                         BeamEnergy     = cms.double(ecms/2.0),
                         BeamEnergyRMS  = cms.double(1.11e-4),
                         BeamAngleRMS   = cms.double(30.03), # in mrad
-                        BeamSizes_ArmF_Trk = cms.vdouble(0.175,0.124), # beam sigma (X) at Arm Forward tracker stations in mm
-                        BeamSize_ArmF_ToF  = cms.double(0.113), # beam sigma (X) at Arm Forward timing station in mm
-                        BeamSizes_ArmB_Trk = cms.vdouble(0.186,0.131), # beam sigma (X) at Arm Backward tracker stations in mm
-                        BeamSize_ArmB_ToF  = cms.double(0.107), # beam sigma (X) at Arm Backward timing station in mm
+                        BeamSizes_ArmF_Trk = cms.vdouble(0.149449,0.216493), # beam sigma (X) at Arm Forward tracker stations in mm
+                        BeamSize_ArmF_ToF  = cms.double(0.241087), # beam sigma (X) at Arm Forward timing station in mm
+                        BeamSizes_ArmB_Trk = cms.vdouble(0.266876,0.336219), # beam sigma (X) at Arm Backward tracker stations in mm
+                        BeamSize_ArmB_ToF  = cms.double(0.361528), # beam sigma (X) at Arm Backward timing station in mm
                         BeamCenters_ArmF_Trk = cms.vdouble(0.,0.), # beam center (X) at Arm Forward tracker stations in mm
                         BeamCenter_ArmF_ToF  = cms.double(0.), # beam center (X) at Arm Forward timing station in mm
                         BeamCenters_ArmB_Trk = cms.vdouble(0.,0.), # beam center (X) at Arm Backward tracker stations in mm
@@ -87,8 +88,8 @@ def customise(process):
                         ToFDetXOffset       = cms.double(tofxoffset), # ToF sensitive area distance from RP edge
                         ToFZPosition        = cms.double(tof),
                         SmearHit            = cms.bool(hit_smear),
-                        HitSigmaX           = cms.double(10),
-                        HitSigmaY           = cms.double(10),
+                        HitSigmaX           = cms.double(0.01),
+                        HitSigmaY           = cms.double(0.01),
                         HitSigmaZ           = cms.double(0),
                         ToFHitSigmaX        = cms.double(0.15),
                         ToFHitSigmaY        = cms.double(4.2/math.sqrt(12)),
@@ -100,14 +101,14 @@ def customise(process):
                         XTrackChiSquareCut  = cms.double(2.),     #X track ChiSquare cut 
                         YTrackChiSquareCut  = cms.double(2.),     #X track ChiSquare cut 
                         ApplyFiducialCuts   = cms.bool(True),     #apply geometrical (X,Y) in the hits
-                        UseToFForTracking   = cms.bool(True)
+                        UseToFForTracking   = cms.bool(False) #not working!! problem with added point for Tracker 1
                         )
 
     ppssim_tracker_strip = cms.PSet(
                         TrackerGeometryType = cms.string("TOTEMStrip"),
                         NumberOfStrips      = cms.int32(512),
-                        StripPitch          = cms.double(66.), #um
-                        CutSideLength       = cms.double(2000.), #um length of the cut side of the strip sensor
+                        StripPitch          = cms.double(0.066), #mm
+                        CutSideLength       = cms.double(2.), #mm length of the cut side of the strip sensor
                         VerticalShift       = cms.double(0.), #vertical shift of the detector with respect to the origin
                         TrkDetXOffset       = cms.double(0.2+0.05), # tracker sensitive area distance from RP edge in mm
                         TrkDetXRotation     = cms.vdouble(0.,0.), #Rotation in degree along X axis of the tracking station in the same orded of TrkDetName
@@ -127,23 +128,20 @@ def customise(process):
     #       \     / 
     #         \ /
     #
-    #    z\
-    #      \
-    #       \____x
-    #       |
-    #       |
-    #       |y
-
+    #       y|  /z
+    #        | /
+    #        |/____x
+    
     ppssim_tracker_pixel = cms.PSet(
                         TrackerGeometryType = cms.string("Pixel"),
                         NumberOfRows        = cms.int32(160),
                         NumberOfColumns     = cms.int32(156),
                         DoubleSizeColumn    = cms.vint32(51,52,103,104),
                         DoubleSizeRow       = cms.vint32(79,80),
-                        PixelPitchX         = cms.double(150.),  # pitch between cells in X in microns
-                        PixelPitchY         = cms.double(100.),  # pitch between cells in Y in microns
+                        PixelPitchX         = cms.double(0.150),  # pitch between cells in X in mm
+                        PixelPitchY         = cms.double(0.100),  # pitch between cells in Y in mm
                         VerticalShift       = cms.double(0.), #vertical shift of the detector with respect to the origin
-                        TrkDetXOffset       = cms.double(200.+200.), # tracker sensitive area distance from RP edge 
+                        TrkDetXOffset       = cms.double(0.200+0.200), # tracker sensitive area distance from RP edge 
                         TrkDetName          = cms.vstring("210near","210far"),
                         TrkDetZPosition     = cms.vdouble(203.827,212.550), #Z position of the tracking station in the same orded of TrkDetName
                         TrkDetXRotation     = cms.vdouble(0.,0.), #Rotation in degree along X axis of the tracking station in the same orded of TrkDetName
@@ -158,13 +156,10 @@ def customise(process):
     #   |______________| 
     #               
     #
-    #    z\
-    #      \
-    #       \____x
-    #       |
-    #       |
-    #       |y
-
+    #       y|  /z
+    #        | /
+    #        |/____x
+    
     ppssim_general_options = cms.PSet(
                         UseHepMCProducer = cms.untracked.bool(True), 
                         VtxMeanX       = VertexX,
@@ -195,7 +190,7 @@ def customise(process):
                         )
 
     # Adding CT-PPS 
-    process.AODSIMoutput.outputCommands.extend(cms.untracked.vstring('keep PPSGenDataPPSSpectrometer_*_*_*','keep PPSSimDataPPSSpectrometer_*_*_*','keep PPSRecoDataPPSSpectrometer_*_*_*'))## add CTPPS eventContent
+    process.AODSIMoutput.outputCommands.extend(cms.untracked.vstring('keep PPSGenDataPPSSpectrometer_*_*_*','keep PPSSimDataPPSSpectrometer_*_*_*','keep PPSRecoDataPPSSpectrometer_*_*_*','keep TotemRPDigiedmDetSetVector_*_*_*'))## add CTPPS eventContent
     # Path and EndPath definitions
     #process.ppssim_step = cms.Path(process.ppssim)#CTPPS
     #process.generation_step.replace(process.generator,process.generator * process.VtxSmeared)#CTPPS
