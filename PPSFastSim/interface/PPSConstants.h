@@ -10,6 +10,7 @@ const double   c_light_ns = c_light_s/s_to_ns;
 const double   urad     = 1./1000000.; //micro rad
 const double   um_to_mm = 0.001;
 const double   um_to_cm = 0.0001;
+const double   um_to_m  = 0.000001;
 const double   mm_to_um = 1000.;
 const double   mm_to_cm = 0.1;
 const double   mm_to_m  = 0.001;
@@ -19,4 +20,8 @@ const double   cm_to_m  = 0.01;
 const double   m_to_cm  = 100.;
 const double   m_to_mm  = 1000.;
 const double   m_to_um  = 1000000.;
+const double   mrad_to_rad  = 0.001;
+const double   rad_to_mrad  = 1000.;
+const double   urad_to_rad  = 0.000001;
+const double   rad_to_urad  = 1000000.;
 #endif

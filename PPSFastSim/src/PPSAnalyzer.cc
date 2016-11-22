@@ -92,8 +92,8 @@ PPSAnalyzer::PPSAnalyzer(const edm::ParameterSet& iConfig)
 {
    //now do what ever initialization is needed
 //
-   string beam1filename       = iConfig.getParameter<string>("Beam1File");
-   string beam2filename       = iConfig.getParameter<string>("Beam2File");
+   // string beam1filename       = iConfig.getParameter<string>("Beam1File");
+   // string beam2filename       = iConfig.getParameter<string>("Beam2File");
    int    beam1dir            = iConfig.getParameter<int>("Beam1Direction");
    int    beam2dir            = iConfig.getParameter<int>("Beam2Direction");
    bool   showbeam            = iConfig.getUntrackedParameter<bool>("ShowBeamLine",false);
@@ -163,7 +163,7 @@ PPSAnalyzer::PPSAnalyzer(const edm::ParameterSet& iConfig)
 
    pps = new PPSSim(true); // instanciate PPSSim with External Generator
    pps->set_KickersOFF(fKickersOFF);
-   pps->set_BeamLineFile(beam1filename,beam2filename);
+   // pps->set_BeamLineFile(beam1filename,beam2filename);
    pps->set_BeamDirection(beam1dir,beam2dir);
    pps->set_BeamEnergySmearing(fSmearEnergy);
    pps->set_BeamEnergy(fBeamEnergy);
@@ -171,19 +171,13 @@ PPSAnalyzer::PPSAnalyzer(const edm::ParameterSet& iConfig)
    pps->set_BeamAngleSmearing(fSmearAngle);
    pps->set_BeamAngleRMS(fBeamAngleRMS);
    // pps->set_BeamXSizes(fBeamSize_ArmF_Trk1,fBeamSize_ArmF_Trk2,fBeamSize_ArmF_ToF,fBeamSize_ArmB_Trk1,fBeamSize_ArmB_Trk2,fBeamSize_ArmB_ToF);
-   pps->set_TCLPosition("TCL4",fTCL4Position,fTCL4Position);
-   pps->set_TCLPosition("TCL5",fTCL5Position,fTCL5Position);
    if (showbeam) pps->set_ShowBeamLine();
    if (simbeam)  pps->set_GenBeamProfile();
    pps->set_VertexPosition(fVtxMeanX,fVtxMeanY,fVtxMeanZ);
    pps->set_CollisionPoint(ip);
-   pps->set_TrackerZPosition(fTrackerZPosition);
-   pps->set_TrackerInsertion(fTrackerInsertion);
-   pps->set_ToFInsertion(fToFInsertion);
    pps->set_TrackerLength(fTrackerLength);
    pps->set_TrackerSize(fTrackerWidth,fTrackerHeight);
    pps->set_ToFSize(fToFWidth,fToFHeight);
-   pps->set_ToFZPosition(fToFZPosition);
    pps->set_ToFResolution(fTimeSigma,fToFHitSigmaX,fToFHitSigmaY);
    pps->set_TrackerEdgeOffset(fTrk1XOffset,fTrk2XOffset,fTrk1XOffset,fTrk2XOffset); // use the same offset for the forward and backward arm
    pps->set_ToFEdgeOffset    (fToFXOffset ,fToFXOffset); // use the same offset for the forward and backward arm

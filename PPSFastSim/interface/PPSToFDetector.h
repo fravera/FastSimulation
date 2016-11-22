@@ -11,6 +11,9 @@ class PPSToFDetector {
             ~PPSToFDetector() {};
             // virtual ~PPSToFDetector() {};
 
+            void SetDetectorName(std::string detectorName) {fDetectorName = detectorName;};
+            std::string GetDetectorName() {return fDetectorName;};
+
             double GetHeight()                       {return DetHeight;};
             double GetWidth()                        {return DetWidth;};
             double GetPosition()                     {return DetPosition;};
@@ -35,6 +38,7 @@ class PPSToFDetector {
             double              DetWidth; // detector width
             double              DetHeight; // detector height
             double              DetPosition; // detector position from beam (absolute value)
+            std::string         fDetectorName;
 
             int                 DetId;
             int                 NHits;

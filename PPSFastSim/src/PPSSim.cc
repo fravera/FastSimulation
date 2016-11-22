@@ -10,19 +10,16 @@
 
 PPSSim::PPSSim(bool ext_gen): fExternalGenerator(ext_gen),
     fVerbose(false),NEvent(0),fGenMode(""),
-    fBeamLine1File(""),fBeamLine2File(""),fBeam1Direction(1),fBeam2Direction(1),fShowBeamLine(false),
+    fBeam1FilePath(""),fBeam2FilePath(""),fBeam1Files(),fBeam2Files(),fBeam1FilesXi(),fBeam2FilesXi(),fBeam1Objects(),fBeam2Objects(),
+    fBeam1Direction(1),fBeam2Direction(1),fShowBeamLine(false),
     fCollisionPoint(""),fBeamLineLength(500),fBeamEnergy(0),fBeamMomentum(0),
-    fBeamXRMS_ArmF_ToF(0.), fBeamXRMS_ArmB_ToF(0.),
     fCrossingAngle(0.),fCrossAngleCorr(false),fKickersOFF(false),
     fDetectorClosestX(-2.),fMaxXfromBeam(-25),fMaxYfromBeam(10), fTrackerGeometry(""),
-    fTrackerZPosition(0.),fTrackerLength(0.),fTrackerWidth(0.),fTrackerHeight(0.),
-    fTrackerInsertion(0.),fVerticalShift(0.),fTrkDetXOffset(0.),fNumberOfStrips(-1),
+    fTrackerLength(0.),fTrackerWidth(0.),fTrackerHeight(0.),
+    fVerticalShift(0.),fTrkDetXOffset(0.),fNumberOfStrips(-1),
     fStripPitch(0.),fCutSideLength(0.),fNumberOfRows(0),fNumberOfColumns(0),
     fDoubleSizeColumn(),fDoubleSizeRow(),fPixelPitchX(0.),fPixelPitchY(0.),
-    fTrackingStationZPositionMap(),fTrackingStationXRotationMap(),
-    fTrackingStationYRotationMap(),fTrackingStationZRotationMap(),
-    fToFWidth(0.),fToFHeight(0.),fToFGeometry(""),fToFZPosition(0.),fToFInsertion(0.),
-    fTCL4Position1(0.),fTCL4Position2(0.),fTCL5Position1(0.),fTCL5Position2(0.),
+    fToFWidth(0.),fToFHeight(0.),fToFGeometry(""),
     fSmearVertex(false),fVtxMeanX(0.),fVtxMeanY(0.),fVtxMeanZ(0.),fVtxSigmaX(0.),fVtxSigmaY(0.),fVtxSigmaZ(0.),
     fSmearHit(1.),fHitSigmaX(0.),fHitSigmaY(0.),fHitSigmaZ(0.),fTimeSigma(0.),
     fTrk1XOffsetF(0.),fTrk2XOffsetF(0.),fTrk1XOffsetB(0.),fTrk2XOffsetB(0.),
@@ -44,14 +41,14 @@ PPSSim::PPSSim(bool ext_gen): fExternalGenerator(ext_gen),
 
 void PPSSim::BeginRun()
 {    
-    if (fVerbose) edm::LogWarning("debug") << "fBeamLine1File: " << fBeamLine1File ;
-    if (fVerbose) edm::LogWarning("debug") << "fBeamLine2File: " << fBeamLine2File ;    
+    // if (fVerbose) edm::LogWarning("debug") << "fBeamLine1File: " << fBeamLine1File ;
+    // if (fVerbose) edm::LogWarning("debug") << "fBeamLine2File: " << fBeamLine2File ;    
     extern int kickers_on;
     kickers_on = (fKickersOFF)?0:1;
     beamlineF = new H_BeamLine(-1,fBeamLineLength);
     beamlineB = new H_BeamLine( 1,fBeamLineLength);
-    beamlineF->fill(fBeamLine2File,fBeam2Direction,fCollisionPoint);
-    beamlineB->fill(fBeamLine1File,fBeam1Direction,fCollisionPoint);
+    beamlineF->fill(fBeam2FilePath + "/" + fBeam2Files[0],fBeam2Direction,fCollisionPoint);
+    beamlineB->fill(fBeam1FilePath + "/" + fBeam1Files[0],fBeam1Direction,fCollisionPoint);
     //
     //set_Strengths();
     beamlineF->offsetElements( 120, 0.097);
@@ -64,8 +61,8 @@ void PPSSim::BeginRun()
     // Create a particle to get the beam energy from the beam file
     //
     
-    pps_stationF = new H_RecRPObject(fTrackingStationZPositionMap[fTrackingDetectorIDs.at(0)],fTrackingStationZPositionMap[fTrackingDetectorIDs.at(1)],*beamlineF);
-    pps_stationB = new H_RecRPObject(fTrackingStationZPositionMap[fTrackingDetectorIDs.at(0)],fTrackingStationZPositionMap[fTrackingDetectorIDs.at(1)],*beamlineB);
+    pps_stationF = new H_RecRPObject(fBeam2StationPositions[fBeam2TrackingDetectorNameMap[fTrackingDetectorIDs.at(0)]],fBeam2StationPositions[fBeam2TrackingDetectorNameMap[fTrackingDetectorIDs.at(1)]],*beamlineF);
+    pps_stationB = new H_RecRPObject(fBeam1StationPositions[fBeam1TrackingDetectorNameMap[fTrackingDetectorIDs.at(0)]],fBeam1StationPositions[fBeam1TrackingDetectorNameMap[fTrackingDetectorIDs.at(1)]],*beamlineB);
     //
     // check the kinematic limits in case it is requested to generate the higgs mass in the central system
     if (fGenMode=="M_X") { // check the kinematic limits
@@ -78,61 +75,15 @@ void PPSSim::BeginRun()
 
         TFile beamProfilesFile("BeamProfiles.root","RECREATE");
 
-        for(unsigned i=0; i< fTrackingDetectorIDs.size(); ++i){
-            TH2F* hBeamProfileArmBTrk = new TH2F(*GenBeamProfile(-fTrackingStationZPositionMap[fTrackingDetectorIDs.at(i)]));
-            fBeamXRMSArmBTrackerMap[fTrackingDetectorIDs.at(i)] = hBeamProfileArmBTrk->GetRMS(1);
-            TH2F* hBeamProfileArmFTrk = new TH2F(*GenBeamProfile(fTrackingStationZPositionMap[fTrackingDetectorIDs.at(i)]));
-            fBeamXRMSArmFTrackerMap[fTrackingDetectorIDs.at(i)] = hBeamProfileArmFTrk->GetRMS(1);
-            if (hBeamProfileArmBTrk) {
-                hBeamProfileArmBTrk->SetName(Form("BeamProfileB_%s",fTrackingDetectorNameMap[fTrackingDetectorIDs.at(i)].data())); 
-                hBeamProfileArmBTrk->Write(); 
-                delete hBeamProfileArmBTrk;
-            }
-            if (hBeamProfileArmFTrk) {
-                hBeamProfileArmFTrk->SetName(Form("BeamProfileF_%s",fTrackingDetectorNameMap[fTrackingDetectorIDs.at(i)].data())); 
-                hBeamProfileArmFTrk->Write(); 
-                delete hBeamProfileArmFTrk;
-            }
+        std::map<string,TH2F*> beam1Profile = GenBeamProfile(-1);
+        std::map<string,TH2F*> beam2Profile = GenBeamProfile( 1);
+
+        for(vector<string>::iterator vIt=fBeam1Objects.begin(); vIt!=fBeam1Objects.end(); ++vIt){
+           beam1Profile[*vIt]->Write();
         }
 
-        TH2F* hBeamProfileToF = GenBeamProfile(fToFZPosition);
-        fBeamXRMS_ArmF_ToF = hBeamProfileToF->GetRMS(1);
-        if (hBeamProfileToF) {hBeamProfileToF->SetName("BeamProfileF_ToF");
-            hBeamProfileToF->Write();
-            delete hBeamProfileToF;
-        }
-        hBeamProfileToF = GenBeamProfile(-fToFZPosition);
-        fBeamXRMS_ArmB_ToF = hBeamProfileToF->GetRMS(1);
-        if (hBeamProfileToF) {hBeamProfileToF->SetName("BeamProfileB_ToF");
-            hBeamProfileToF->Write();
-            delete hBeamProfileToF;
-        }
-        
-        // if colimator position not defined, try to get it from the beamline
-        if (fTCL4Position1*fTCL4Position2==0) {
-            H_OpticalElement* tcl = beamlineB->getElement("TCL.4R5.B1"); if (tcl) fTCL4Position1=tcl->getS();
-            tcl = beamlineF->getElement("TCL.4L5.B2");if (tcl) fTCL4Position2=tcl->getS();
-        }
-        if (fTCL5Position1*fTCL5Position2==0) {
-            H_OpticalElement* tcl = beamlineB->getElement("TCL.5R5.B1"); if (tcl) fTCL5Position1=tcl->getS();
-            tcl = beamlineF->getElement("TCL.5L5.B2");if (tcl) fTCL5Position2=tcl->getS();
-            tcl=beamlineF->getElement("TCL.5R5.B1");
-        }
-        if (fTCL4Position1*fTCL4Position2>0){
-            TH2F* h1 = GenBeamProfile(-fTCL4Position1); // use negative position to tell gen. which beamline to chose
-            fBeam1PosAtTCL4=make_pair<double,double>(h1->GetMean(1),h1->GetMean(2));
-            fBeam1RMSAtTCL4=make_pair<double,double>(h1->GetRMS(1),h1->GetRMS(2));
-            TH2F* h2 = GenBeamProfile( fTCL4Position2);
-            fBeam2PosAtTCL4=make_pair<double,double>(h2->GetMean(1),h2->GetMean(2));
-            fBeam2RMSAtTCL4=make_pair<double,double>(h2->GetRMS(1),h2->GetRMS(2));
-        }
-        if (fTCL5Position1*fTCL5Position2>0){
-            TH2F* h1 = GenBeamProfile(-fTCL5Position1); // use negative position to tell gen. which beamline to chose
-            fBeam1PosAtTCL5=make_pair<double,double>(h1->GetMean(1),h1->GetMean(2));
-            fBeam1RMSAtTCL5=make_pair<double,double>(h1->GetRMS(1),h1->GetRMS(2));
-            TH2F* h2 = GenBeamProfile( fTCL5Position2);
-            fBeam2PosAtTCL5=make_pair<double,double>(h2->GetMean(1),h2->GetMean(2));
-            fBeam2RMSAtTCL5=make_pair<double,double>(h2->GetRMS(1),h2->GetRMS(2));
+        for(vector<string>::iterator vIt=fBeam2Objects.begin(); vIt!=fBeam2Objects.end(); ++vIt){
+            beam2Profile[*vIt]->Write();
         }
 
         beamProfilesFile.Close();
@@ -144,13 +95,14 @@ void PPSSim::BeginRun()
     fReco= new PPSSpectrometer<Reco>();
     //
 
-    fTrackerZPosition = fTrackingStationZPositionMap[fTrackingDetectorIDs.at(0)];
-    fTrackerLength = fTrackingStationZPositionMap[fTrackingDetectorIDs.at(1)]-fTrackingStationZPositionMap[fTrackingDetectorIDs.at(0)];
+    fTrackerZPosition = fBeam1StationPositions[fBeam1TrackingDetectorNameMap[fTrackingDetectorIDs.at(0)]];
+    fTrackerLength = fBeam1StationPositions[fBeam1TrackingDetectorNameMap[fTrackingDetectorIDs.at(1)]] - fBeam1StationPositions[fBeam1TrackingDetectorNameMap[fTrackingDetectorIDs.at(0)]];;
 
     for(unsigned i=0; i< fTrackingDetectorIDs.size(); ++i){
         int detectorId = fTrackingDetectorIDs.at(i);
         edm::LogWarning("debug") << "Building detector "<< detectorId;
-        string detectorName = fTrackingDetectorNameMap[i];
+        string beam1DetectorName = fBeam1TrackingDetectorNameMap[i];
+        string beam2DetectorName = fBeam2TrackingDetectorNameMap[i];
         PPSTrkDetector *trackingDetector_ArmForward = NULL;
         PPSTrkDetector *trackingDetector_ArmBackward = NULL;
 
@@ -173,7 +125,7 @@ void PPSSim::BeginRun()
             // std::cout<<3<<std::endl;
             stripDetector_ArmForward->SetDetectorId(0+detectorId);
             // std::cout<<4<<std::endl;
-            stripDetector_ArmForward->SetDetectorName("rp_45"+detectorName);
+            stripDetector_ArmForward->SetDetectorName(beam2DetectorName);
             // std::cout<<5<<std::endl;
             // unsigned int rawId = TotemRPDetId::decToRawId(1000+detectorId);
             // std::cout<<5.1<<std::endl;
@@ -190,9 +142,9 @@ void PPSSim::BeginRun()
             // }
             // std::cout<<7<<std::endl;
             TVector3 rpPosition_ArmForward(
-                -fTrkDetXOffset+fBeamXCenterArmFTrackerMap[detectorId]-fBeamXRMSArmFTrackerMap[detectorId]*fTrackerInsertion,
+                -fTrkDetXOffset+fBeam2CenterAtStation[beam2DetectorName]-fBeam2SigmaAtStation[beam2DetectorName]*fBeam2StationSigmaInsertion[beam2DetectorName],
                 +fVerticalShift,
-                -fTrackingStationZPositionMap[detectorId]*m_to_mm);
+                -fBeam2StationPositions[beam2DetectorName]*m_to_mm);
             // std::cout<<"Forward Pot Position: x = "<<rpPosition_ArmForward.X()<<" y = "<<rpPosition_ArmForward.Y()<<" z = "<<rpPosition_ArmForward.Z()<<std::endl;
             // std::cout<<8<<std::endl;
             stripDetector_ArmForward->SetRpPosition(rpPosition_ArmForward);
@@ -223,7 +175,7 @@ void PPSSim::BeginRun()
             // std::cout<<15<<std::endl;
             stripDetector_ArmBackward->SetDetectorId(1000+detectorId);
             // std::cout<<16<<std::endl;
-            stripDetector_ArmBackward->SetDetectorName("rp_56"+detectorName);
+            stripDetector_ArmBackward->SetDetectorName(beam1DetectorName);
             // std::cout<<17<<std::endl;
             // DetGeomDesc *stripPlaneDescription_ArmBackward = fRpGeometry->GetDetector(TotemRPDetId::decToRawId(1000+detectorId));
             // // std::cout<<18<<std::endl;
@@ -233,9 +185,9 @@ void PPSSim::BeginRun()
             // }
             // std::cout<<19<<std::endl;
             TVector3 rpPosition_ArmBackward(
-                -fTrkDetXOffset+fBeamXCenterArmBTrackerMap[detectorId]-fBeamXRMSArmBTrackerMap[detectorId]*fTrackerInsertion,
-                fVerticalShift,
-                fTrackingStationZPositionMap[detectorId]*m_to_mm);
+                -fTrkDetXOffset+fBeam1CenterAtStation[beam1DetectorName]-fBeam1SigmaAtStation[beam1DetectorName]*fBeam1StationSigmaInsertion[beam1DetectorName],
+                +fVerticalShift,
+                -fBeam1StationPositions[beam1DetectorName]*m_to_mm);
             // std::cout<<"Backward Pot Position: x = "<<rpPosition_ArmBackward.X()<<" y = "<<rpPosition_ArmBackward.Y()<<" z = "<<rpPosition_ArmBackward.Z()<<std::endl;
             // std::cout<<20<<std::endl;
             stripDetector_ArmBackward->SetRpPosition(rpPosition_ArmBackward);
@@ -266,12 +218,12 @@ void PPSSim::BeginRun()
         if(fTrackerGeometry=="Pixel"){
             PPSPixelDetector *pixelDetector_ArmForward = new PPSPixelDetector();
             pixelDetector_ArmForward->SetDetectorId(1000+detectorId);
-            pixelDetector_ArmForward->SetDetectorName("rp_56"+detectorName);
+            pixelDetector_ArmForward->SetDetectorName(beam2DetectorName);
             trackingDetector_ArmForward = pixelDetector_ArmForward;
 
             PPSPixelDetector *pixelDetector_ArmBackward = new PPSPixelDetector();
             pixelDetector_ArmForward->SetDetectorId(0+detectorId);
-            pixelDetector_ArmBackward->SetDetectorName("rp_45"+detectorName);
+            pixelDetector_ArmBackward->SetDetectorName(beam1DetectorName);
             trackingDetector_ArmBackward = pixelDetector_ArmBackward;
         }
 
@@ -288,8 +240,10 @@ void PPSSim::BeginRun()
     }
 
     if(fToFGeometry=="diamond") {
-        ToFDet_F  = new PPSToFDetector(fToFWidth,fToFHeight,fToFInsertion*fBeamXRMS_ArmF_ToF+fToFXOffsetF+fBeamXCenter_ArmF_ToF);
-        ToFDet_B  = new PPSToFDetector(fToFWidth,fToFHeight,fToFInsertion*fBeamXRMS_ArmB_ToF+fToFXOffsetB+fBeamXCenter_ArmB_ToF);
+        ToFDet_F  = new PPSToFDetector(fToFWidth,fToFHeight,fBeam2StationSigmaInsertion[fBeam2ToFDetectorName]*fBeam2SigmaAtStation[fBeam2ToFDetectorName]+fToFXOffsetF+fBeam2CenterAtStation[fBeam2ToFDetectorName]);
+        ToFDet_F->SetDetectorName(fBeam2ToFDetectorName);
+        ToFDet_B  = new PPSToFDetector(fToFWidth,fToFHeight,fBeam1StationSigmaInsertion[fBeam1ToFDetectorName]*fBeam1SigmaAtStation[fBeam1ToFDetectorName]+fToFXOffsetF+fBeam1CenterAtStation[fBeam1ToFDetectorName]);
+        ToFDet_B->SetDetectorName(fBeam1ToFDetectorName);
     }
          
     //   Check the overall kinematic limits
@@ -587,7 +541,7 @@ void PPSSim::Simulation()
             part->setPosition(-(vtxX-fVtxMeanX)*cm_to_um,(vtxY-fVtxMeanY)*cm_to_um,0.,0.,-(vtxZ)*cm_to_m);
             part->set4Momentum(-protonF->Px(),protonF->Py(),-protonF->Pz(),protonF->E());
             part->computePath(beamlineF);
-            Propagate(part,Direction);
+            // Propagate(part,Direction);
             if (part) {delete part;part = NULL;}
         } 
         //
@@ -605,7 +559,7 @@ void PPSSim::Simulation()
             part->setPosition(-(vtxX-fVtxMeanX)*cm_to_um,(vtxY-fVtxMeanY)*cm_to_um,0.,0.,-(vtxZ)*cm_to_m);
             part->set4Momentum(-protonB->Px(),protonB->Py(),-protonB->Pz(),protonB->E()); // HECTOR uses always positive z momentum
             part->computePath(beamlineB);
-            Propagate(part,Direction);
+            // Propagate(part,Direction);
             if (part) {delete part;part = NULL;}
         } 
     }
@@ -927,12 +881,15 @@ void PPSSim::ToFDigi(int Direction, const PPSBaseData* arm_sim,PPSToFDetector* T
     
     double toFOffset=0.;
     double beamXRMS_ToF=0.;
+    double toFInsertion=0.;
     if (Direction>0) {
         toFOffset = fToFXOffsetF;
-        beamXRMS_ToF = fBeamXRMS_ArmF_ToF;
+        beamXRMS_ToF = fBeam2SigmaAtStation[fBeam2ToFDetectorName];
+        toFInsertion = fBeam2StationSigmaInsertion[fBeam2ToFDetectorName];
     } else {
         toFOffset = fToFXOffsetB;
-        beamXRMS_ToF = fBeamXRMS_ArmB_ToF;
+        beamXRMS_ToF = fBeam1SigmaAtStation[fBeam1ToFDetectorName];
+        toFInsertion = fBeam1StationSigmaInsertion[fBeam1ToFDetectorName];
     }
 
     if(!arm_sim||!ToFDet) return;
@@ -949,7 +906,7 @@ void PPSSim::ToFDigi(int Direction, const PPSBaseData* arm_sim,PPSToFDetector* T
         //     continue;
         // }
         if (fApplyFiducialCuts) {
-            double xmin = fToFInsertion*beamXRMS_ToF + toFOffset;
+            double xmin = toFInsertion*beamXRMS_ToF + toFOffset;
             double xmax = xmin+fToFWidth;
             if (fabs(x)<xmin||fabs(x)>xmax||fabs(y)>fabs(fToFHeight/2)) { // use ABS because the detector are on the negative X side
                 continue;
@@ -1129,102 +1086,102 @@ TLorentzVector PPSSim::shoot(const double& t,const double& xi, const double& phi
 
 //--------------------------------------------------------------------------------------------------------------//
 
-void PPSSim::Propagate(H_BeamParticle* pbeam,int Direction) {
-    PPSSimData* arm = NULL;
-    H_BeamLine* beamline = NULL;
-    double startZ = -pbeam->getS(); // in the CMS ref. frame, in meters
-    double tcl4pos = 0;
-    double tcl5pos = 0;
+// void PPSSim::Propagate(H_BeamParticle* pbeam,int Direction) {
+//     PPSSimData* arm = NULL;
+//     H_BeamLine* beamline = NULL;
+//     double startZ = -pbeam->getS(); // in the CMS ref. frame, in meters
+//     double tcl4pos = 0;
+//     double tcl5pos = 0;
 
-    std::map<int,PPSTrkDetector*> trakingDetectorMap;
+//     std::map<int,PPSTrkDetector*> trakingDetectorMap;
 
-    if (Direction>0) {
-        arm = &(fSim->ArmF);
-        beamline=beamlineF;
-        tcl4pos=fTCL4Position2;
-        tcl5pos=fTCL5Position2;
-        trakingDetectorMap = fTrackingStationForward;
-    }
-    if (Direction<0) {
-        arm = &(fSim->ArmB);
-        beamline=beamlineB;
-        tcl4pos=fTCL4Position1;
-        tcl5pos=fTCL5Position1;
-        trakingDetectorMap = fTrackingStationBackward;
-    }
-    // Propagate until TCL4 and 5
-    if (tcl4pos>0) {
-        double beampos = (Direction<0)?fBeam1PosAtTCL4.first:fBeam2PosAtTCL4.first;
-        double beamrms = (Direction<0)?fBeam1RMSAtTCL4.first:fBeam2RMSAtTCL4.first;
-        pbeam->propagate(tcl4pos);
-        double xpos = -pbeam->getX()*um_to_mm;
-        arm->get_Track().set_XatTCL4(fabs(xpos-beampos)/beamrms);
-    }
-    if (tcl5pos>0) {
-        double beampos = (Direction<0)?fBeam1PosAtTCL5.first:fBeam2PosAtTCL5.first;
-        double beamrms = (Direction<0)?fBeam1RMSAtTCL5.first:fBeam2RMSAtTCL5.first;
-        pbeam->propagate(tcl5pos);double xpos=-pbeam->getX()*um_to_mm;
-        arm->get_Track().set_XatTCL5(fabs(xpos-beampos)/beamrms);
-    }
+//     if (Direction>0) {
+//         arm = &(fSim->ArmF);
+//         beamline=beamlineF;
+//         tcl4pos=fTCL4Position2;
+//         tcl5pos=fTCL5Position2;
+//         trakingDetectorMap = fTrackingStationForward;
+//     }
+//     if (Direction<0) {
+//         arm = &(fSim->ArmB);
+//         beamline=beamlineB;
+//         tcl4pos=fTCL4Position1;
+//         tcl5pos=fTCL5Position1;
+//         trakingDetectorMap = fTrackingStationBackward;
+//     }
+//     // Propagate until TCL4 and 5
+//     if (tcl4pos>0) {
+//         double beampos = (Direction<0)?fBeam1PosAtTCL4.first:fBeam2PosAtTCL4.first;
+//         double beamrms = (Direction<0)?fBeam1RMSAtTCL4.first:fBeam2RMSAtTCL4.first;
+//         pbeam->propagate(tcl4pos);
+//         double xpos = -pbeam->getX()*um_to_mm;
+//         arm->get_Track().set_XatTCL4(fabs(xpos-beampos)/beamrms);
+//     }
+//     if (tcl5pos>0) {
+//         double beampos = (Direction<0)?fBeam1PosAtTCL5.first:fBeam2PosAtTCL5.first;
+//         double beamrms = (Direction<0)?fBeam1RMSAtTCL5.first:fBeam2RMSAtTCL5.first;
+//         pbeam->propagate(tcl5pos);double xpos=-pbeam->getX()*um_to_mm;
+//         arm->get_Track().set_XatTCL5(fabs(xpos-beampos)/beamrms);
+//     }
 
-    for(vector<int>::iterator dIt=fTrackingDetectorIDs.begin(); dIt!=fTrackingDetectorIDs.end(); ++dIt){
-        double hitZ = fTrackingStationZPositionMap[*dIt];
-        pbeam->propagate(abs(hitZ));
+//     for(vector<int>::iterator dIt=fTrackingDetectorIDs.begin(); dIt!=fTrackingDetectorIDs.end(); ++dIt){
+//         double hitZ = fTrackingStationZPositionMap[*dIt];
+//         pbeam->propagate(abs(hitZ));
 
-        int stopped = (pbeam->stopped(beamline) && pbeam->getStoppingElement()->getS()<abs(hitZ))?1:0;
-        if (stopped) continue;
-        // uses mm for X,Y and m for Z in the PPS station
-        double hitX = -pbeam->getX()*um_to_mm;
-        double hitY = pbeam->getY()*um_to_mm;
-        //
-        // PPSStripDetector *stripDetector = (PPSStripDetector*)&trakingDetectorMap[*dIt];
-        // if(stripDetector==NULL) std::cout<<"NULL\n";
-        // std::cout<<"Direction = "<<Direction<<" hit x = "<<hitX<<" hit y = "<<hitY<<" hit z = "<<hitZ<<std::endl;
-        trakingDetectorMap[*dIt]->AddHit(TVector3(hitX,hitY,hitZ*m_to_mm));
-        // stripDetector->AddHit(TVector3(hitX,hitY,hitZ));
-        // ((PPSStripDetector)trakingDetectorMap[*dIt]).AddHit(TVector3(hitX,hitY,hitZ));
-    }
+//         int stopped = (pbeam->stopped(beamline) && pbeam->getStoppingElement()->getS()<abs(hitZ))?1:0;
+//         if (stopped) continue;
+//         // uses mm for X,Y and m for Z in the PPS station
+//         double hitX = -pbeam->getX()*um_to_mm;
+//         double hitY = pbeam->getY()*um_to_mm;
+//         //
+//         // PPSStripDetector *stripDetector = (PPSStripDetector*)&trakingDetectorMap[*dIt];
+//         // if(stripDetector==NULL) std::cout<<"NULL\n";
+//         // std::cout<<"Direction = "<<Direction<<" hit x = "<<hitX<<" hit y = "<<hitY<<" hit z = "<<hitZ<<std::endl;
+//         trakingDetectorMap[*dIt]->AddHit(TVector3(hitX,hitY,hitZ*m_to_mm));
+//         // stripDetector->AddHit(TVector3(hitX,hitY,hitZ));
+//         // ((PPSStripDetector)trakingDetectorMap[*dIt]).AddHit(TVector3(hitX,hitY,hitZ));
+//     }
 
-    pbeam->propagate(fTrackerZPosition);
-    // std::cout<<"fTrackerZPosition "<<fTrackerZPosition<<std::endl;
+//     pbeam->propagate(fTrackerZPosition);
+//     // std::cout<<"fTrackerZPosition "<<fTrackerZPosition<<std::endl;
 
-    int stopped = (pbeam->stopped(beamline) && pbeam->getStoppingElement()->getS()<fTrackerZPosition)?1:0;
-    if (!stopped){
+//     int stopped = (pbeam->stopped(beamline) && pbeam->getStoppingElement()->getS()<fTrackerZPosition)?1:0;
+//     if (!stopped){
 
-        // uses mm for X,Y and m for Z in the PPS station
-        double x1 = -pbeam->getX()*um_to_mm;
-        double y1 = pbeam->getY()*um_to_mm;
-        //
-        // std::cout<<"Old Direction = "<<Direction<<" hit x = "<<x1<<" hit y = "<<y1<<" hit z = "<<fTrackerZPosition<<std::endl;
-        arm->get_Track().set_HitDet1(x1,y1);
-        arm->AddHitTrk1(x1,y1);
-    }
+//         // uses mm for X,Y and m for Z in the PPS station
+//         double x1 = -pbeam->getX()*um_to_mm;
+//         double y1 = pbeam->getY()*um_to_mm;
+//         //
+//         // std::cout<<"Old Direction = "<<Direction<<" hit x = "<<x1<<" hit y = "<<y1<<" hit z = "<<fTrackerZPosition<<std::endl;
+//         arm->get_Track().set_HitDet1(x1,y1);
+//         arm->AddHitTrk1(x1,y1);
+//     }
 
-    pbeam->propagate(fTrackerZPosition+fTrackerLength);
+//     pbeam->propagate(fTrackerZPosition+fTrackerLength);
 
-    stopped=(pbeam->stopped(beamline) && pbeam->getStoppingElement()->getS()<fTrackerZPosition+fTrackerLength)?1:0;
-    if (!stopped){
-        double x2 = -pbeam->getX()*um_to_mm;
-        double y2 = pbeam->getY()*um_to_mm;
+//     stopped=(pbeam->stopped(beamline) && pbeam->getStoppingElement()->getS()<fTrackerZPosition+fTrackerLength)?1:0;
+//     if (!stopped){
+//         double x2 = -pbeam->getX()*um_to_mm;
+//         double y2 = pbeam->getY()*um_to_mm;
         
-        // std::cout<<"Old Direction = "<<Direction<<" hit x = "<<x2<<" hit y = "<<y2<<" hit z = "<<fTrackerZPosition+fTrackerLength<<std::endl;
-        arm->get_Track().set_HitDet2(x2,y2);
-        arm->AddHitTrk2(x2,y2);
-    }
+//         // std::cout<<"Old Direction = "<<Direction<<" hit x = "<<x2<<" hit y = "<<y2<<" hit z = "<<fTrackerZPosition+fTrackerLength<<std::endl;
+//         arm->get_Track().set_HitDet2(x2,y2);
+//         arm->AddHitTrk2(x2,y2);
+//     }
 
-    // Propagate until Time detector
-    pbeam->propagate(fToFZPosition);
+//     // Propagate until Time detector
+//     pbeam->propagate(fToFZPosition);
 
-    double xt = -pbeam->getX()*um_to_mm;
-    double yt = pbeam->getY()*um_to_mm;
-    stopped=(pbeam->stopped(beamline) && pbeam->getStoppingElement()->getS()<fToFZPosition)?1:0;
-    if (!stopped){
-        //
-        double tof = (fToFZPosition-Direction*startZ)/c_light_ns;
-        arm->get_Track().set_HitToF(tof,xt,yt);
-        arm->AddHitToF(tof,xt,yt);
-    }
-}
+//     double xt = -pbeam->getX()*um_to_mm;
+//     double yt = pbeam->getY()*um_to_mm;
+//     stopped=(pbeam->stopped(beamline) && pbeam->getStoppingElement()->getS()<fToFZPosition)?1:0;
+//     if (!stopped){
+//         //
+//         double tof = (fToFZPosition-Direction*startZ)/c_light_ns;
+//         arm->get_Track().set_HitToF(tof,xt,yt);
+//         arm->AddHitToF(tof,xt,yt);
+//     }
+// }
 
 //--------------------------------------------------------------------------------------------------------------//
 
@@ -1258,9 +1215,7 @@ void PPSSim::PrintParameters()
     edm::LogWarning("debug") << "Running with:\n"
         << "TrackerPosition     = " <<  fTrackerZPosition << "\n"
         << "TrackerLength       = " <<  fTrackerLength << "\n"
-        << "TrackerZPosition    = " <<  fTrackerZPosition << "\n"
         << "TrackerLength       = " <<  fTrackerLength << "\n"
-        << "ToFZPosition        = " <<  fToFZPosition << "\n"
         << "BeamLineLength      = " <<  fBeamLineLength << "\n"
         << "SmearVertex         = " <<  fSmearVertex << "\n"
         << "VtxMeanX            = " <<  fVtxMeanX << "\n"
@@ -1290,92 +1245,363 @@ void PPSSim::PrintParameters()
         << "MinThetaXatDet1     = " <<fMinThetaXatDet1 << "\n"
         << "MaxThetaXatDet1     = " <<fMaxThetaXatDet1 << "\n"
         << "MinThetaYatDet1     = " <<fMinThetaYatDet1 << "\n"
-        << "MaxThetaYatDet1     = " <<fMaxThetaYatDet1 << "\n"
-        << "fBeamXRMS_ArmF_Trk1 = " <<fBeamXRMSArmFTrackerMap[20]<<"\n"
-        << "fBeamXRMS_ArmF_Trk2 = " <<fBeamXRMSArmFTrackerMap[30]<<"\n"
-        << "fBeamXRMS_ArmF_ToF  = " <<fBeamXRMS_ArmF_ToF<<"\n"
-        << "fBeamXRMS_ArmB_Trk1 = " <<fBeamXRMSArmBTrackerMap[20]<<"\n"
-        << "fBeamXRMS_ArmB_Trk2 = " <<fBeamXRMSArmBTrackerMap[30]<<"\n"
-        << "fBeamXRMS_ArmB_ToF  = " <<fBeamXRMS_ArmB_ToF<<"\n"
-        << "fYTrackChiSquareCut = " <<fYTrackChiSquareCut<<"\n"
-        << "fXTrackChiSquareCut = " <<fXTrackChiSquareCut<<"\n";
+        << "MaxThetaYatDet1     = " <<fMaxThetaYatDet1 << "\n";
+
+    edm::LogWarning("debug") << "\nBeam1 station parameters\n";
+    edm::LogWarning("debug") << "Name\tZ\tXCenter\tXSigma\tInsertionSigma  \n";
+    for(vector<string>::iterator vIt=fBeam1Objects.begin(); vIt!=fBeam1Objects.end(); ++vIt){
+        edm::LogWarning("debug") << *vIt << "\t" << fBeam1StationPositions[*vIt] << "\t" << fBeam1CenterAtStation[*vIt] << "\t" << fBeam1SigmaAtStation[*vIt] << "\t" << fBeam1StationSigmaInsertion[*vIt];
+    }
+
+    edm::LogWarning("debug") << "\nBeam2 station parameters\n";
+    edm::LogWarning("debug") << "Name\tZ\tXCenter\tXSigma\tInsertionSigma  \n";
+    for(vector<string>::iterator vIt=fBeam2Objects.begin(); vIt!=fBeam2Objects.end(); ++vIt){
+        edm::LogWarning("debug") << *vIt << "\t" << fBeam2StationPositions[*vIt] << "\t" << fBeam2CenterAtStation[*vIt] << "\t" << fBeam2SigmaAtStation[*vIt] << "\t" << fBeam2StationSigmaInsertion[*vIt];
+    }
+
 }
 
 //--------------------------------------------------------------------------------------------------------------//
 
-TH2F* PPSSim::GenBeamProfile(const double& z)
+std::map<string,TH2F*> PPSSim::GenBeamProfile(int  direction)
 {
     float beamp_w = 20.0;//beam pipe width
-    int  direction=int(z/fabs(z));
+    vector<string> beamObjects;
+    vector<string> beamTCLNames;
+
+
+    if(direction < 0){
+        beamObjects = fBeam1Objects;
+        beamTCLNames=fBeam1TCLNames;
+    }
+    if(direction > 0){
+        beamObjects = fBeam2Objects;
+        beamTCLNames=fBeam2TCLNames;
+    }
+
+    //double protonBeamMomentum = TMath::Sqrt(ProtonMassSQ-fBeamEnergy*fBeamEnergy);
     int   nbins = 500;
     TH2F* beamprofile = (TH2F*)gDirectory->FindObject("BeamProfile");
     if (beamprofile) delete beamprofile;
-    beamprofile = new TH2F("BeamProfile",Form("Beam Profile at z=%3.2f; X (mm); Y (mm)",z),nbins,-beamp_w,beamp_w,nbins,-beamp_w,beamp_w);
-    for(int n=0;n<100000;n++) {
-        H_BeamParticle p1; // beam particle generated in the ref. frame of Hector/LHC
-        p1.smearPos();
-        if (fCrossAngleCorr) CrossingAngleCorrection(p1,direction); // apply the crossing angle correction (boost)
-        else { p1.smearAng();p1.smearE(); }   // if no correnction for crossing angle, apply just the smearing
-        //
-        // set the vertex, given in the CMS ref. frame (x-> -x; z-> -z)
-        p1.setPosition(
-                p1.getX(),p1.getY(),
-                p1.getTX(),p1.getTY(),
-                p1.getS());
-        //
-        if (z<0) p1.computePath(beamlineB);
-        else     p1.computePath(beamlineF);
-        p1.propagate(fabs(z));
-        beamprofile->Fill(-p1.getX()*um_to_mm,p1.getY()*um_to_mm);
+    std::map<string,TH2F*> beamProfilesHistograms;
+
+
+    for(vector<string>::iterator vIt=beamObjects.begin(); vIt!=beamObjects.end(); ++vIt){
+        beamProfilesHistograms[*vIt] = new TH2F(Form("Beam%iProfile_%s",direction,vIt->data()),Form("Beam %i Profile at %s",direction,vIt->data()),nbins,-beamp_w,beamp_w,nbins,-beamp_w,beamp_w);
     }
-    return beamprofile;
+
+    for(vector<string>::iterator vIt=beamTCLNames.begin(); vIt!=beamTCLNames.end(); ++vIt){
+        for(int n=0;n<10000;n++) {
+        // for(int n=0;n<100000;n++) {
+            vector5Def protonKinematicAndEnergy;
+            TVector3 protonBeamVertex(gRandom->Gaus(0.,fVtxMeanX*mm_to_m),gRandom->Gaus(0.,fVtxMeanY*mm_to_m),0.);
+            // TVector3 protonBeamVertex(0.,0.,0.);
+            TVector3 protonBeamAngle(gRandom->Gaus(0.,fBeamAngleRMS*urad_to_rad),gRandom->Gaus(0.,fBeamAngleRMS*urad_to_rad),0.);
+            // TVector3 protonBeamAngle(0.,0.,0.);
+            vector4Def protonKinematic(protonBeamVertex.X(),protonBeamAngle.X(),protonBeamVertex.Y(),protonBeamAngle.Y());
+            protonKinematicAndEnergy = std::pair<double,vector4Def>(0.,protonKinematic);
+            map<string,vector5Def> protonKinematicsAtStations = PPSSim::PropagateParticle(direction, protonKinematicAndEnergy);
+            if(protonKinematicsAtStations[*vIt].first < 0.) continue;
+            vector4Def protonKinematicsAtStation = protonKinematicsAtStations[*vIt].second;
+            beamProfilesHistograms[*vIt]->Fill(protonKinematicsAtStation(0)*m_to_mm,protonKinematicsAtStation(2)*m_to_mm);
+        }
+        
+        if(direction < 0){
+            fBeam1CenterAtStation[*vIt] = beamProfilesHistograms[*vIt]->GetMean(1);
+            fBeam1SigmaAtStation[*vIt] = beamProfilesHistograms[*vIt]->GetRMS(1);
+        }
+        if(direction > 0){
+            fBeam2CenterAtStation[*vIt] = beamProfilesHistograms[*vIt]->GetMean(1);
+            fBeam2SigmaAtStation[*vIt] = beamProfilesHistograms[*vIt]->GetRMS(1);
+        }
+
+    }
+
+    for(int n=0;n<10000;n++) {
+    // for(int n=0;n<100000;n++) {
+        vector5Def protonKinematicAndEnergy;
+        TVector3 protonBeamVertex(gRandom->Gaus(0.,fVtxMeanX*mm_to_m),gRandom->Gaus(0.,fVtxMeanY*mm_to_m),0.);
+        // TVector3 protonBeamVertex(0.,0.,0.);
+        TVector3 protonBeamAngle(gRandom->Gaus(0.,fBeamAngleRMS*urad_to_rad),gRandom->Gaus(0.,fBeamAngleRMS*urad_to_rad),0.);
+        // TVector3 protonBeamAngle(0.,0.,0.);
+        vector4Def protonKinematic(protonBeamVertex.X(),protonBeamAngle.X(),protonBeamVertex.Y(),protonBeamAngle.Y());
+        protonKinematicAndEnergy = std::pair<double,vector4Def>(0.,protonKinematic);
+        map<string,vector5Def> protonKinematicsAtStations = PPSSim::PropagateParticle(direction, protonKinematicAndEnergy);
+        for(map<string,vector5Def>::iterator mIt=protonKinematicsAtStations.begin(); mIt!=protonKinematicsAtStations.end(); ++mIt){
+            if(find(beamTCLNames.begin(),beamTCLNames.end(),mIt->first) != beamTCLNames.end()) continue;
+            if(mIt->second.first < 0.) continue;
+            vector4Def protonKinematicsAtStation = mIt->second.second;
+            beamProfilesHistograms[mIt->first]->Fill(protonKinematicsAtStation(0)*m_to_mm,protonKinematicsAtStation(2)*m_to_mm);
+        }
+    }
+
+
+    for(vector<string>::iterator vIt=beamObjects.begin(); vIt!=beamObjects.end(); ++vIt){
+        if(find(beamTCLNames.begin(),beamTCLNames.end(),*vIt) != beamTCLNames.end()) continue;
+        if(direction < 0){
+            fBeam1CenterAtStation[*vIt] = beamProfilesHistograms[*vIt]->GetMean(1);
+            fBeam1SigmaAtStation[*vIt] = beamProfilesHistograms[*vIt]->GetRMS(1);
+        }
+        if(direction > 0){
+            fBeam2CenterAtStation[*vIt] = beamProfilesHistograms[*vIt]->GetMean(1);
+            fBeam2SigmaAtStation[*vIt] = beamProfilesHistograms[*vIt]->GetRMS(1);
+        }
+    }
+
+    return beamProfilesHistograms;
 }
-/*
-   void PPSSim::set_Strengths()
-   {
-// The offset is always positive, since both outgoind beamline is in the outside of the reference orbit
-//
-std::map<std::string,double> strengths;
-std::map<std::string,double> betaX;
-std::map<std::string,double> betaY;
-std::map<std::string,double> DX;
-std::map<std::string,double> DY;
-ifstream in("beta90m.par");
-if (!in) exit(2);
-std::string opt_elm;
-double str;
-double betax, betay, dx, dy;
-while(!in.eof()) {
-in >> opt_elm >> betax >> betay >> dx >> dy >> str;
-strengths[opt_elm] = str;
-betaX[opt_elm] = betax;
-betaY[opt_elm] = betay;
-DX[opt_elm] = dx;
-DY[opt_elm] = dy;
+
+//--------------------------------------------------------------------------------------------------------------//
+
+map<string,vector5Def> PPSSim::PropagateParticle(int direction, vector5Def protonKinematic){
+    
+    vector<string> beamObjects;
+    map<string,double> beamCenterAtTCLMap;
+    map<string,double> beamSigmaAtTCLMap;
+    vector<string> beamTCLNames;
+    std::map< int, std::map<string,std::pair<vector5Def, matrix44Def> > > beamParameterCollection;
+    std::map<string,double> beamCenterAtStation;
+    std::map<string,double> beamSigmaAtStation;
+    std::map<string,double> beamStationSigmaInsertion;
+
+    if(direction < 0){
+        beamObjects = fBeam1Objects;
+        beamTCLNames=fBeam1TCLNames;
+        beamParameterCollection = fBeam1ParameterCollection;
+        beamCenterAtStation = fBeam1CenterAtStation;
+        beamSigmaAtStation = fBeam1SigmaAtStation;
+        beamStationSigmaInsertion = fBeam1StationSigmaInsertion;
+    }
+    if(direction > 0){
+        beamObjects = fBeam2Objects;
+        beamTCLNames=fBeam2TCLNames;
+        beamParameterCollection =  fBeam2ParameterCollection;
+        beamCenterAtStation = fBeam2CenterAtStation;
+        beamSigmaAtStation = fBeam2SigmaAtStation;
+        beamStationSigmaInsertion = fBeam2StationSigmaInsertion;
+    }
+
+    map<string,vector5Def> protonKinematicsAtStations;
+    for(vector<string>::iterator vIt=beamObjects.begin(); vIt!=beamObjects.end(); ++vIt){
+        vector5Def defaultKinematics = std::pair<double,vector4Def>(-1.,vector4Def(0.,0.,0.,0.));
+        protonKinematicsAtStations[*vIt] = defaultKinematics;
+    }
+
+    double protonXi = protonKinematic.first;
+
+    for(vector<string>::iterator vIt=beamObjects.begin(); vIt!=beamObjects.end(); ++vIt){
+        std::pair<vector5Def, matrix44Def> opticForStationProton = beamParameterCollection[GetXiClassNumber(direction, protonXi)][*vIt];
+        // std::pair<vector5Def, matrix44Def> opticForStationBeam = beamParameterCollection[GetXiClassNumber(direction, 0.)][*vIt];
+        vector4Def protonKinematicCalculated =  opticForStationProton.first.second + opticForStationProton.second * protonKinematic.second;
+        // if(*vIt=="XRPH.E6R5.B1") std::cout<< opticForStationProton.first.second(0)<<"\t"<<protonKinematic.second(0)<<"\n";
+        // vector4Def protonKinematicCalculated = - opticForStationBeam.first.second + opticForStationProton.first.second + opticForStationProton.second * protonKinematic.second;
+        // if(*vIt==beamObjects.back() && direction==-1) std::cout<<(opticForStationBeam.first.second)(0)<<std::endl;
+        protonKinematicsAtStations[*vIt] = std::pair<double,vector4Def>(protonXi,protonKinematicCalculated);
+        // std::cout<<*vIt<<std::endl;
+        if(find(beamTCLNames.begin(),beamTCLNames.end(),*vIt) != beamTCLNames.end() && 
+            (protonKinematicCalculated(0)*m_to_mm<beamCenterAtStation[*vIt]-beamSigmaAtStation[*vIt]*beamStationSigmaInsertion[*vIt] ||
+            protonKinematicCalculated(0)*m_to_mm>beamCenterAtStation[*vIt]+beamSigmaAtStation[*vIt]*beamStationSigmaInsertion[*vIt] ))  return protonKinematicsAtStations;
+    }
+
+    return protonKinematicsAtStations;
+
 }
-for(int i=0;i<beamlineF->getNumberOfElements();i++){
-H_OpticalElement* optE = beamlineF->getElement(i);
-std::string type = optE->getTypeString();
-if (type.find("Dipole")<type.length()||type.find("Quadrupole")<type.length()) {
-std::string name = optE->getName();
-optE->setK(strengths[name]);
-optE->setBetaX(betaX[name]);
-optE->setBetaY(betaY[name]);
-optE->setDX(DX[name]);
-optE->setDY(DY[name]);
+
+//--------------------------------------------------------------------------------------------------------------//
+
+std::map<string,std::pair<vector5Def, matrix44Def> > PPSSim::GetMatrixFromTwissFile(string inputTwissFileName, std::vector<string> beamObjects, double &protonMomentumXi){
+
+    std::map<string,std::pair<vector5Def, matrix44Def> > matrixMap;
+
+    FILE *inputTwissFile;
+    inputTwissFile = fopen(inputTwissFileName.data(),"r");
+
+    if(inputTwissFile == NULL){
+        throw cms::Exception("PPSSim.h") << "Twiss file " << inputTwissFileName << " does not exist";
+    }
+
+    map<string, int> nameVsColumn;
+
+    double beamMomentum=-1.;
+    double protonMomentumLoss=-1.;
+
+    // get positions in the columns
+    while(!feof(inputTwissFile)){
+        char cInput[1000];
+        fgets(cInput,1000,inputTwissFile);
+        if(cInput[0] =='@'){
+            if(strncmp(cInput,"@ PC",4)==0){
+                string headerString(cInput);
+                stringstream headerStream;
+                string dummy;
+                headerStream<<headerString;
+                headerStream>>dummy>>dummy>>dummy>>beamMomentum;
+
+            }
+            if(strncmp(cInput,"@ DELTAP'",8)==0){
+                string headerString(cInput);
+                stringstream headerStream;
+                string dummy;
+                headerStream<<headerString;
+                headerStream>>dummy>>dummy>>dummy>>protonMomentumXi;
+
+            }
+            continue;
+        }
+        string columnNamesString(cInput);
+        stringstream columnNameStream;
+        columnNameStream<<columnNamesString;
+        string columnName;
+        int counter = -2; //starting with -1 because there is al "*" as a first column name
+        while((columnNameStream >> columnName)){
+            // std::cout<<columnName<<"   "<<counter<<std::endl;
+            nameVsColumn[columnName]=counter++;
+        }
+        fgets(cInput,1000,inputTwissFile);
+        break;
+    }    
+
+    // protonMomentumXi=(beamMomentum-protonMomentumLoss)/beamMomentum;
+    protonMomentumXi = -protonMomentumXi;
+    double protonPz = beamMomentum*(1-protonMomentumXi);
+
+    while(!feof(inputTwissFile)){
+        char cInput[1000];
+        fgets(cInput,1000,inputTwissFile);
+        if(feof(inputTwissFile)) break;
+        string columnNamesString(cInput);
+        stringstream columnNameStream;
+        columnNameStream<<columnNamesString;
+        string valueString;
+        columnNameStream >> valueString;
+        bool foundNeededStation=false;
+        for(std::vector<string>::iterator vIt=beamObjects.begin(); vIt!=beamObjects.end(); ++vIt){
+            if(valueString.find(*vIt)==1){
+                foundNeededStation=true;
+                break;
+            }
+        }
+        if(!foundNeededStation) continue;
+        double columnValue;
+        std::vector<double> columnValues;
+        while((columnNameStream >> columnValue)) {
+            columnValues.push_back(columnValue);
+        }
+
+        vector4Def beamPositionAndAngle;
+        beamPositionAndAngle(0) = columnValues[nameVsColumn["X"]];
+        beamPositionAndAngle(1) = TMath::ATan(columnValues[nameVsColumn["PX"]]/beamMomentum);
+        beamPositionAndAngle(2) = columnValues[nameVsColumn["Y"]];
+        beamPositionAndAngle(3) = TMath::ATan(columnValues[nameVsColumn["PY"]]/beamMomentum);
+        vector5Def beamPositionAtElement = vector5Def(columnValues[nameVsColumn["S"]],beamPositionAndAngle);
+        // for(unsigned int i=0; i<columnValues.size(); ++i){
+        //     std::cout<< i << "  " << columnValues[i]<<std::endl;
+        // }
+        // std::cout<<"S"<< "  " <<nameVsColumn["S"] << "  " << columnValues[nameVsColumn["S"]]<<std::endl;
+        // std::cout<<"X"<< "  " <<nameVsColumn["X"] << "  " << columnValues[nameVsColumn["X"]]<<std::endl;
+        // std::cout<<"Y"<< "  " <<nameVsColumn["Y"] << "  " << columnValues[nameVsColumn["Y"]]<<std::endl;
+        matrix44Def transportMatrix;
+        for(int r=1; r<=4; ++r){
+            for(int c=1; c<=4; ++c){
+                transportMatrix(r-1,c-1) = columnValues[nameVsColumn[Form("RE%i%i",r,c)]];
+                //std::cout<<nameVsColumn[Form("R%i%i",r,c)]<<std::endl;
+            }
+        }
+
+        std::pair<vector5Def, matrix44Def> elementParameter(beamPositionAtElement,transportMatrix);
+        matrixMap[valueString.substr(1,valueString.length()-2)] = elementParameter;
+        // if("XRPH.E6R5.B1"==valueString.substr(1,valueString.length()-2)) std::cout<<inputTwissFileName<<"\t"<<std::setprecision(10)<<columnValues[nameVsColumn["X"]]<<std::endl;
+    }
+
+    return matrixMap;
+ }
+
+ //--------------------------------------------------------------------------------------------------------------//
+
+void PPSSim::LoadTwissMatrices(){
+
+    fBeam1ParameterCollection.clear();
+    fBeam1XiClasses.clear();
+
+    std::vector<double> twissFileBeam1Xis;
+    for (unsigned int i = 0; i < fBeam1Files.size(); ++i){
+        double protonMomentumXi;
+        fBeam1ParameterCollection[i] = GetMatrixFromTwissFile(fBeam1FilePath + "/" + fBeam1Files.at(i),fBeam1Objects, protonMomentumXi);
+        // if(i==0) protonMomentumXi = 0;
+        twissFileBeam1Xis.push_back(protonMomentumXi);
+        // std::cout<<"Class number " << i << "\n";
+        // for(int r=1; r<=4; ++r){
+        //     for(int c=1; c<=4; ++c){
+        //         std::cout<<fBeam1ParameterCollection[i]["TCL.4R5.B1"].second(r-1,c-1)<<"\t";
+        //     }
+        //     std::cout<<"\n";
+        // }
+        // std::cout<< std::setprecision(10) <<protonMomentumXi<<std::endl;
+    }
+
+    //std::cout<< fBeam1ParameterCollection.size() <<std::endl;
+
+    // std::cout<<"beam1:\n";
+    for (unsigned int i = 0; i < twissFileBeam1Xis.size(); ++i){
+        //double protonMomentumXi = twissFileBeam1Xis.at(i);
+        double xiMin = -1;
+        double xiMax = -1;
+
+        if(i==0) xiMin=-1.;
+        else xiMin = (twissFileBeam1Xis.at(i-1) + twissFileBeam1Xis.at(i))/2.;
+        if(i==fBeam1Files.size()-1) xiMax = 1.;
+        else xiMax = (twissFileBeam1Xis.at(i) + twissFileBeam1Xis.at(i+1))/2.;
+        // std::cout<<"class "<<i<<" -> "<<std::setprecision(7)<<xiMin<<" : "<<xiMax<<std::endl;
+
+        fBeam1XiClasses[i] = pair<double,double> (xiMin,xiMax);
+    }
+
+    //std::cout<< fBeam1XiClasses.size() <<std::endl;
+
+    std::vector<double> twissFileBeam2Xis;
+    for (unsigned int i = 0; i < fBeam2Files.size(); ++i){
+        double protonMomentumXi;
+        fBeam2ParameterCollection[i] = GetMatrixFromTwissFile(fBeam2FilePath + "/" + fBeam2Files.at(i),fBeam2Objects, protonMomentumXi);
+        // if(i==0) protonMomentumXi = 0;
+        twissFileBeam2Xis.push_back(protonMomentumXi);
+        // std::cout<< std::setprecision(10) <<protonMomentumXi<<std::endl;
+    }
+
+    //std::cout<< fBeam2ParameterCollection.size() <<std::endl;
+
+    // std::cout<<"beam2:\n";
+    for (unsigned int i = 0; i < twissFileBeam2Xis.size(); ++i){
+        //double protonMomentumXi = twissFileBeam2Xis.at(i);
+        double xiMin = -1;
+        double xiMax = -1;
+
+        if(i==0) xiMin=-1.;
+        else xiMin = (twissFileBeam2Xis.at(i-1) + twissFileBeam2Xis.at(i))/2.;
+        if(i==fBeam2Files.size()-1) xiMax = 1.;
+        else xiMax = (twissFileBeam2Xis.at(i) + twissFileBeam2Xis.at(i+1))/2.;
+        // std::cout<<"class "<<i<<" -> "<<std::setprecision(7)<<xiMin<<" : "<<xiMax<<std::endl;
+
+        fBeam2XiClasses[i] = pair<double,double> (xiMin,xiMax);
+    }
+
+    //std::cout<< fBeam2XiClasses.size() <<std::endl;
+
+    return;
+
 }
-}
-for(int i=0;i<beamlineB->getNumberOfElements();i++){
-H_OpticalElement* optE = beamlineB->getElement(i);
-std::string type = optE->getTypeString();
-if (type.find("Dipole")<type.length()||type.find("Quadrupole")<type.length()) {
-std::string name = optE->getName();
-optE->setK(strengths[name]);
-optE->setBetaX(betaX[name]);
-optE->setBetaY(betaY[name]);
-optE->setDX(DX[name]);
-optE->setDY(DY[name]);
-}
-}
-}
-*/
+
+int PPSSim::GetXiClassNumber(int direction, double protonXi){
+
+    std::map< int, pair<double, double> > beamXiClasses;
+
+    if(direction<0) beamXiClasses = fBeam1XiClasses;
+    if(direction>0) beamXiClasses = fBeam2XiClasses;
+
+    int xiClassIterator=-1;
+    for(std::map< int, pair<double, double> >::iterator mIt=beamXiClasses.begin(); mIt!=beamXiClasses.end(); ++mIt){
+        xiClassIterator = mIt->first;
+        if(mIt->second.second >= protonXi) break;
+    }
+    // std::cout<<xiClassIterator<<" ";
+    return xiClassIterator;
+ }

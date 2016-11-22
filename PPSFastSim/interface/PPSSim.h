@@ -51,6 +51,11 @@
 
 //=====================================================================================================
 
+typedef ROOT::Math::SMatrix<double,4,4> matrix44Def;
+typedef ROOT::Math::SVector<double,4>   vector4Def;
+typedef pair<double,vector4Def>         vector5Def;
+
+
 class PPSSim {
     public:
         PPSSim(bool =false);
@@ -60,6 +65,12 @@ class PPSSim {
         void BeginEvent();
         void EndRun();
         void EndEvent();
+
+
+        void LoadTwissMatrices();
+        std::map<string,std::pair<vector5Def, matrix44Def> > GetMatrixFromTwissFile(string inputTwissFileName, std::vector<string> beamObjects, double &protonMomentumXi);
+        map<string,vector5Def> PropagateParticle(int direction, pair<double,vector4Def> protonKinematics);
+        int GetXiClassNumber(int direction, double protonXi);
 
         //void set_Strengths();
         void set_Verbose(bool f)   {fVerbose= f;};
@@ -75,9 +86,6 @@ class PPSSim {
         void set_CentralMass(double m,double me) {fCentralMass=m;fCentralMassErr=me;};
 
         //Tracker characteristics
-        void set_TrackerZPosition   (double p)  {
-            fTrackerZPosition=p;
-        };
         void set_TrackerEdgeOffset  (double x1F, double x2F, double x1B, double x2B) {
             fTrk1XOffsetF=x1F; fTrk2XOffsetF=x2F; fTrk1XOffsetB=x1B; fTrk2XOffsetB=x2B;
         };
@@ -86,14 +94,6 @@ class PPSSim {
         };
         void set_TrackerSize        (double w,double h) {
             fTrackerWidth=w;fTrackerHeight=h;
-        };
-        void set_BeamXSizeTracker(std::map<int,double> beamXRMSArmFTrackerMap,std::map<int,double> beamXRMSArmBTrackerMap) {
-            fBeamXRMSArmFTrackerMap = beamXRMSArmFTrackerMap;
-            fBeamXRMSArmBTrackerMap = beamXRMSArmBTrackerMap;
-        };
-        void set_BeamXCenterTracker(std::map<int,double> beamXCenterArmFTrackerMap,std::map<int,double> beamXCenterArmBTrackerMap) {
-            fBeamXCenterArmFTrackerMap = beamXCenterArmFTrackerMap;
-            fBeamXCenterArmBTrackerMap = beamXCenterArmBTrackerMap;
         };
         void set_HitSmearing        (bool f=true)    {
             fSmearHit = f;
@@ -147,11 +147,9 @@ class PPSSim {
         void set_TrackingDetectorIDs(vector<int> trackingDetectorIDs)  {
             fTrackingDetectorIDs = trackingDetectorIDs;
         };
-        void set_TrackingDetectorNameMap(std::map<int,string> trackingDetectorNameMap)  {
-            fTrackingDetectorNameMap = trackingDetectorNameMap;
-        };
-        void set_TrackingStationZPositionMap(std::map<int,double> trackingStationZPositionMap) {
-            fTrackingStationZPositionMap = trackingStationZPositionMap;
+        void set_TrackingDetectorNameMap(std::map<int,string> beam1TrackingDetectorNameMap, std::map<int,string> beam2TrackingDetectorNameMap)  {
+            fBeam1TrackingDetectorNameMap = beam1TrackingDetectorNameMap;
+            fBeam2TrackingDetectorNameMap = beam2TrackingDetectorNameMap;
         };
         void set_TrackingStationXRotationMap(std::map<int,double> trackingStationXRotationMap) {
             fTrackingStationXRotationMap = trackingStationXRotationMap;
@@ -174,7 +172,10 @@ class PPSSim {
             fToFXOffsetF = toFXOffsetF; fToFXOffsetB = toFXOffsetB;};
         void set_ToFSize(double w,double h) {fToFWidth=w;fToFHeight=h;};
         void set_ToFGeometry(std::string tofgeometry)   {fToFGeometry=tofgeometry;};
-        void set_ToFZPosition(double p)       {fToFZPosition=p;};
+        void set_ToFDetectorName(string beam1ToFDetectorName, string beam2ToFDetectorName){
+            fBeam1ToFDetectorName = beam1ToFDetectorName;
+            fBeam2ToFDetectorName = beam2ToFDetectorName;
+        };
         void set_ToFResolution(double p, double smearingX, double smearingY)  {fTimeSigma=p; fToFHitSigmaX = smearingX; fToFHitSigmaY = smearingY;};
 
 
@@ -183,13 +184,61 @@ class PPSSim {
         //     {fMaxXfromBeam=x;fMaxYfromBeam=y;fDetectorClosestX=c;};
         void set_ApplyFiducialCuts(bool f)   {fApplyFiducialCuts=f;};
         void set_UseToFForTracking(bool f)   {fUseToFForTracking=f;};
-        void set_TCLPosition(const string& tcl,double z1,double z2) {
-            if (tcl=="TCL4")      {fTCL4Position1=z1;fTCL4Position2=z2;}
-            else if (tcl=="TCL5") {fTCL5Position1=z1;fTCL5Position2=z2;}
-            else edm::LogWarning("debug")  <<"WARNING: Unknown Collimator " << tcl ;
-        }
+        // void set_TCLPosition(const string& tcl,double z1,double z2) {
+        //     if (tcl=="TCL4")      {fTCL4Position1=z1;fTCL4Position2=z2;}
+        //     else if (tcl=="TCL5") {fTCL5Position1=z1;fTCL5Position2=z2;}
+        //     else edm::LogWarning("debug")  <<"WARNING: Unknown Collimator " << tcl ;
+        // }
+
+        
+        void set_Beam1StationPositions(std::map<string,double> beam1StationPositions){
+            fBeam1StationPositions = beam1StationPositions;
+        };
+        void set_Beam2StationPositions(std::map<string,double> beam2StationPositions){
+            fBeam2StationPositions = beam2StationPositions;
+        };
+        void set_Beam1CenterAtStation(std::map<string,double> beam1CenterAtStation){
+            fBeam1CenterAtStation = beam1CenterAtStation;
+        };
+        void set_Beam1SigmaAtStation(std::map<string,double> beam1SigmaAtStation){
+            fBeam1SigmaAtStation = beam1SigmaAtStation;
+        };
+        void set_Beam1StationSigmaInsertion(std::map<string,double> beam1StationSigmaInsertion){
+            fBeam1StationSigmaInsertion = beam1StationSigmaInsertion;
+        };
+        void set_Beam2CenterAtStation(std::map<string,double> beam2CenterAtStation){
+            fBeam2CenterAtStation = beam2CenterAtStation;
+        };
+        void set_Beam2SigmaAtStation(std::map<string,double> beam2SigmaAtStation){
+            fBeam2SigmaAtStation = beam2SigmaAtStation;
+        };
+        void set_Beam2StationSigmaInsertion(std::map<string,double> beam2StationSigmaInsertion){
+            fBeam2StationSigmaInsertion = beam2StationSigmaInsertion;
+        };
+
+        void set_TCLNames(vector<string> beam1TCLNames, vector<string> beam2TCLNames){
+            fBeam1TCLNames = beam1TCLNames;
+            fBeam2TCLNames = beam2TCLNames;
+        };
+
         void set_VertexSmearing(bool f=true) {fSmearVertex = f;};
-        void set_BeamLineFile(std::string b1, std::string b2) {fBeamLine1File=b1;fBeamLine2File=b2;};
+        // void set_BeamLineFile(std::string b1, std::string b2) {fBeamLine1File=b1;fBeamLine2File=b2;};
+        void set_BeamLineFilePath(string beam1FilePath,string beam2FilePath){
+            fBeam1FilePath = beam1FilePath;
+            fBeam2FilePath = beam2FilePath;
+        };
+        void set_BeamLineFiles(vector<string> beam1Files,vector<string> beam2Files){
+            fBeam1Files = beam1Files;
+            fBeam2Files = beam2Files;
+        };
+        void set_BeamLineFilesXi(vector<double> beam1FilesXi,vector<double> beam2FilesXi){
+            fBeam1FilesXi = beam1FilesXi;
+            fBeam2FilesXi = beam2FilesXi;
+        };
+        void set_BeamLineObjects(vector<string> beam1Objects,vector<string> beam2Objects){
+            fBeam1Objects = beam1Objects;
+            fBeam2Objects = beam2Objects;
+        };
         void set_BeamDirection(int b1dir,int b2dir) {fBeam1Direction=b1dir;fBeam2Direction=b2dir;};
         void set_ShowBeamLine()                     {fShowBeamLine=true;};
         void set_GenBeamProfile()                   {fSimBeam=true;};
@@ -223,16 +272,7 @@ class PPSSim {
         //     fBeamXRMS_ArmF_Trk = beamXRMS_ArmF_Trk;
         //     fBeamXRMS_ArmB_Trk = beamXRMS_ArmB_Trk;
         // };
-        void set_BeamXRMSToF(double beamXRMS_ArmF_ToF,double beamXRMS_ArmB_ToF){
-            fBeamXRMS_ArmF_ToF = beamXRMS_ArmF_ToF;
-            fBeamXRMS_ArmB_ToF = beamXRMS_ArmB_ToF;
-        };
-         void set_BeamXCenterToF(double beamXCenter_ArmF_ToF,double beamXCenter_ArmB_ToF){
-            fBeamXCenter_ArmF_ToF = beamXCenter_ArmF_ToF;
-            fBeamXCenter_ArmB_ToF = beamXCenter_ArmB_ToF;
-        };
-        void set_TrackerInsertion(double xpos) {fTrackerInsertion=xpos;};
-        void set_ToFInsertion(double xpos)     {fToFInsertion=xpos;};
+
         void set_TrackImpactParameterCut(double rip){fTrackImpactParameterCut=rip;}
         void set_ThetaXRangeatDet1(double thx_min,double thx_max){fMinThetaXatDet1=thx_min;fMaxThetaXatDet1=thx_max;}
         void set_ThetaYRangeatDet1(double thy_min,double thy_max){fMinThetaYatDet1=thy_min;fMaxThetaYatDet1=thy_max;}
@@ -242,7 +282,7 @@ class PPSSim {
         void ReadGenEvent(const HepMC::GenEvent* ); // read data from HepMC::GenEvent
         void ReadGenEvent(const std::vector<reco::GenParticle>* ); // read data from reco::GenParticleCollection
         void set_GenData();   // to be used when the generation is done by external generator
-        TH2F*  GenBeamProfile(const double& z);
+        std::map<string,TH2F*> GenBeamProfile(int  direction);
         void Generation();
         void Simulation();
         void Reconstruction();
@@ -255,7 +295,7 @@ class PPSSim {
         void ReconstructArm(H_RecRPObject* pps_station, double x1,double y1,double x2,double y2, double& tx, double& ty,double& eloss);
         void Get_t_and_xi(const TLorentzVector* p,double& t, double& xi);
 
-        void Propagate(H_BeamParticle* p1,int Direction) ; // returns true if particle has stopped before detector position
+        // void Propagate(H_BeamParticle* p1,int Direction) ; // returns true if particle has stopped before detector position
         void GenSingleParticle(double& , double& ,double&);
         void GenCentralMass(double& , double& ,double&,double&,double&,double&);
 
@@ -284,11 +324,7 @@ class PPSSim {
         double get_BeamEnergy()              {return fBeamEnergy;};
         TH2F* get_Beam1Profile()             {return beam1profile;};
         TH2F* get_Beam2Profile()             {return beam2profile;};
-        void ProjectToToF(const double x1, const double y1, const double x2, const double y2, double& xt, double& yt) {    
-            xt = (fToFZPosition - (fTrackerZPosition+fTrackerLength))*(x2-x1)/(fTrackerLength)+x2;
-            yt = (fToFZPosition - (fTrackerZPosition+fTrackerLength))*(y2-y1)/(fTrackerLength)+y2;
-        };
-
+        
     private:
         bool         fExternalGenerator;
         bool         fVerbose;
@@ -306,8 +342,24 @@ class PPSSim {
         H_RecRPObject* pps_stationF;
         H_RecRPObject* pps_stationB;
         // LHC and det parameters
-        std::string         fBeamLine1File;
-        std::string         fBeamLine2File;
+        // std::string         fBeamLine1File;
+        // std::string         fBeamLine2File;
+        string          fBeam1FilePath;
+        string          fBeam2FilePath;
+        vector<string>  fBeam1Files;
+        vector<string>  fBeam2Files;
+        vector<double>  fBeam1FilesXi;
+        vector<double>  fBeam2FilesXi;
+        vector<string>  fBeam1Objects;
+        vector<string>  fBeam2Objects;
+
+        // beam map : < xiClassNumber, map < stationName, pair <beamPositionAtElement, TwissMatrix> > >
+        // using beamPositionAtElement = (S(m), X(mm), thetaX(mrad), Y(mm), thetaY(mrad)) from matrix files
+        std::map< int, std::map<string,std::pair<vector5Def, matrix44Def> > > fBeam1ParameterCollection;
+        std::map< int, std::map<string,std::pair<vector5Def, matrix44Def> > > fBeam2ParameterCollection;
+        std::map< int, pair<double, double> > fBeam1XiClasses;
+        std::map< int, pair<double, double> > fBeam2XiClasses;
+
         int                 fBeam1Direction;
         int                 fBeam2Direction;
         bool                fShowBeamLine;
@@ -315,14 +367,6 @@ class PPSSim {
         float          fBeamLineLength;
         double         fBeamEnergy;
         double         fBeamMomentum;
-        std::map<int,double> fBeamXRMSArmFTrackerMap; // beam X size at tracker stations
-        double         fBeamXRMS_ArmF_ToF; // beam X size at tof station
-        std::map<int,double> fBeamXRMSArmBTrackerMap; // beam X size at tracker stations
-        double         fBeamXRMS_ArmB_ToF; // beam X size at tof station
-        std::map<int,double> fBeamXCenterArmFTrackerMap; // beam X center at tracker stations
-        double         fBeamXCenter_ArmF_ToF; // beam X center at tof station
-        std::map<int,double> fBeamXCenterArmBTrackerMap; // beam X center at tracker stations
-        double         fBeamXCenter_ArmB_ToF; // beam X center at tof station
         double         fCrossingAngle; // in micro radians
         bool           fCrossAngleCorr;
         bool           fKickersOFF;
@@ -336,7 +380,6 @@ class PPSSim {
         double         fTrackerLength;
         double         fTrackerWidth;
         double         fTrackerHeight;
-        double         fTrackerInsertion; // position of tracker during data taking (in number of sigmas)
         double         fVerticalShift;
         double         fTrkDetXOffset;
         int            fNumberOfStrips;
@@ -351,8 +394,8 @@ class PPSSim {
         double         fPixelPitchX;
         double         fPixelPitchY;
         vector<int>     fTrackingDetectorIDs;
-        std::map<int,string> fTrackingDetectorNameMap;
-        std::map<int,double> fTrackingStationZPositionMap;
+        std::map<int,string> fBeam1TrackingDetectorNameMap;
+        std::map<int,string> fBeam2TrackingDetectorNameMap;
         std::map<int,double> fTrackingStationXRotationMap;
         std::map<int,double> fTrackingStationYRotationMap;
         std::map<int,double> fTrackingStationZRotationMap;
@@ -365,22 +408,25 @@ class PPSSim {
         double         fToFHeight;
         string         fToFGeometry;
         double         fToFZPosition;
-        double         fToFInsertion;     // position of tof during data taking (in number of sigmas)
+        string         fBeam1ToFDetectorName;
+        string         fBeam2ToFDetectorName;
         
+        std::map<string,double> fBeam1StationPositions;
+        std::map<string,double> fBeam2StationPositions;
+        std::map<string,double> fBeam1CenterAtStation;
+        std::map<string,double> fBeam2CenterAtStation;
+        std::map<string,double> fBeam1SigmaAtStation;
+        std::map<string,double> fBeam2SigmaAtStation;
+        std::map<string,double> fBeam1StationSigmaInsertion;
+        std::map<string,double> fBeam2StationSigmaInsertion;
+        vector<string> fBeam1TCLNames;
+        vector<string> fBeam2TCLNames;
+
         double         fTCL4Position1;
         double         fTCL4Position2;
         double         fTCL5Position1;
         double         fTCL5Position2;
-        std::pair<double,double>   fBeam1PosAtTCL4;
-        std::pair<double,double>   fBeam1RMSAtTCL4;
-        std::pair<double,double>   fBeam2PosAtTCL4;
-        std::pair<double,double>   fBeam2RMSAtTCL4;
-        std::pair<double,double>   fBeam1PosAtTCL5;
-        std::pair<double,double>   fBeam1RMSAtTCL5;
-        std::pair<double,double>   fBeam2PosAtTCL5;
-        std::pair<double,double>   fBeam2RMSAtTCL5;
-
-
+       
         std::map<int,PPSTrkDetector*> fTrackingStationForward;
         std::map<int,PPSTrkDetector*> fTrackingStationBackward;
         // PPSTrkStation* TrkStation_F; // auxiliary object with the tracker geometry
